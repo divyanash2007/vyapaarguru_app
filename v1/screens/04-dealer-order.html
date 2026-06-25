@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Dealer Order — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.dealer-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; margin-bottom:14px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:border-color 0.15s; }
+.dealer-card.selected { border-color:var(--accent); background:rgba(0,237,100,0.05); }
+.dealer-avatar { width:44px; height:44px; background:var(--surface2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.dealer-info { flex:1; }
+.dealer-name { font-size:14px; font-weight:600; }
+.dealer-sub { font-size:12px; color:var(--fg-muted); margin-top:2px; }
+.order-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.order-item:last-child { border-bottom:none; }
+.oi-info { flex:1; }
+.oi-name { font-size:13px; font-weight:500; }
+.oi-price { font-size:12px; color:var(--fg-muted); margin-top:2px; }
+.order-summary { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; margin-top:14px; }
+.scan-add-bar { display:flex; gap:8px; margin-bottom:14px; }
+.scan-add-bar input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--fg); font-family:var(--font); font-size:14px; padding:10px 12px; outline:none; }
+.scan-add-bar input:focus { border-color:var(--accent); }
+.scan-add-bar button { background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--accent); padding:0 12px; cursor:pointer; display:flex; align-items:center; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <a href="01-dashboard.html" class="back-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="title">Order to Dealer</div>
+    <span class="badge badge-blue" id="item-count">0 items</span>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body">
+    <!-- Dealer selection -->
+    <div class="section-label">Select Dealer</div>
+    <div class="dealer-card selected" onclick="selectDealer(this)">
+      <div class="dealer-avatar">🏪</div>
+      <div class="dealer-info">
+        <div class="dealer-name">Sharma Traders</div>
+        <div class="dealer-sub">Grocery & FMCG · Last order 3 days ago</div>
+      </div>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="color:var(--accent)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <div class="dealer-card" onclick="selectDealer(this)">
+      <div class="dealer-avatar">🏬</div>
+      <div class="dealer-info">
+        <div class="dealer-name">Gupta Wholesale</div>
+        <div class="dealer-sub">Beverages & Snacks · Last order 1 week ago</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Add items by scan or search -->
+    <div class="section-label">Add Items</div>
+    <div class="scan-add-bar">
+      <input type="text" id="item-search" placeholder="Search or type item name…">
+      <button onclick="openScanner(addByBarcode)" title="Scan barcode">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/>
+          <rect x="3" y="16" width="5" height="5"/>
+          <path d="M21 16h-3v3M18 21h3M16 16v5M21 21v-2"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Suggested reorder (low stock) -->
+    <div class="alert alert-warn" style="margin-bottom:12px">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      3 items need restocking — added below
+    </div>
+
+    <!-- Order items list -->
+    <div class="card" style="padding:0 14px" id="order-list">
+      <div class="order-item" data-item="Tata Salt 500g" data-price="18">
+        <div class="oi-info">
+          <div class="oi-name">Tata Salt 500g</div>
+          <div class="oi-price">₹18/unit · Current stock: 3</div>
+        </div>
+        <div class="qty-stepper">
+          <button class="qty-btn" data-dir="down">−</button>
+          <input class="qty-val" type="number" value="12" min="0" max="999" onchange="updateTotal()">
+          <button class="qty-btn" data-dir="up">+</button>
+        </div>
+      </div>
+      <div class="order-item" data-item="India Gate Basmati 1kg" data-price="105">
+        <div class="oi-info">
+          <div class="oi-name">India Gate Basmati 1kg</div>
+          <div class="oi-price">₹105/unit · Current stock: 8</div>
+        </div>
+        <div class="qty-stepper">
+          <button class="qty-btn" data-dir="down">−</button>
+          <input class="qty-val" type="number" value="10" min="0" max="999" onchange="updateTotal()">
+          <button class="qty-btn" data-dir="up">+</button>
+        </div>
+      </div>
+      <div class="order-item" data-item="Coca-Cola 600ml" data-price="32">
+        <div class="oi-info">
+          <div class="oi-name">Coca-Cola 600ml</div>
+          <div class="oi-price">₹32/unit · Out of stock</div>
+        </div>
+        <div class="qty-stepper">
+          <button class="qty-btn" data-dir="down">−</button>
+          <input class="qty-val" type="number" value="24" min="0" max="999" onchange="updateTotal()">
+          <button class="qty-btn" data-dir="up">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="order-summary">
+      <div class="bill-line"><span style="color:var(--fg-muted)">Items</span><span id="total-items">3 items</span></div>
+      <div class="bill-line"><span style="color:var(--fg-muted)">Subtotal</span><span id="subtotal">₹1,704</span></div>
+      <div class="bill-line"><span style="color:var(--fg-muted)">Expected delivery</span><span>Tomorrow, 10 AM</span></div>
+      <div class="bill-total"><span>Total</span><span id="grand-total">₹1,704</span></div>
+    </div>
+
+    <div style="height:14px"></div>
+    <button class="btn btn-primary btn-full" onclick="placeOrder()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      Send Order to Dealer
+    </button>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- Scanner overlay -->
+  <div id="scanner-overlay" class="scanner-overlay" style="display:none">
+    <div class="scanner-close" onclick="closeScanner()">✕</div>
+    <div class="scanner-viewport">
+      <div class="scanner-line"></div>
+      <div class="scanner-corner tl"></div><div class="scanner-corner tr"></div>
+      <div class="scanner-corner bl"></div><div class="scanner-corner br"></div>
+    </div>
+    <div class="scanner-label">Scan item barcode to add to order<br><span style="font-size:12px;color:var(--fg-muted)">Scanning automatically…</span></div>
+  </div>
+
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+<script>
+const BARCODES = {
+  '8901030874628': { name: 'Tata Salt 500g', price: 18 },
+  '8906002480012': { name: 'Fortune Sunflower Oil 1L', price: 130 },
+  '8901719110023': { name: 'India Gate Basmati 1kg', price: 105 },
+  '8901058851019': { name: 'Dove Soap 100g', price: 40 },
+  '8901030874635': { name: 'Coca-Cola 600ml', price: 32 },
+};
+
+function addByBarcode(code) {
+  const p = BARCODES[code];
+  const name = p ? p.name : 'Item ' + code;
+  const price = p ? p.price : 0;
+  const list = document.getElementById('order-list');
+  const div = document.createElement('div');
+  div.className = 'order-item';
+  div.dataset.price = price;
+  div.innerHTML = `<div class="oi-info"><div class="oi-name">${name}</div><div class="oi-price">₹${price}/unit · Barcode: ${code}</div></div>
+    <div class="qty-stepper">
+      <button class="qty-btn" data-dir="down">−</button>
+      <input class="qty-val" type="number" value="1" min="0" max="999" onchange="updateTotal()">
+      <button class="qty-btn" data-dir="up">+</button>
+    </div>`;
+  list.appendChild(div);
+  updateTotal();
+}
+
+function updateTotal() {
+  const items = document.querySelectorAll('#order-list .order-item');
+  let total = 0;
+  items.forEach(item => {
+    const qty = parseInt(item.querySelector('.qty-val').value) || 0;
+    const price = parseFloat(item.dataset.price) || 0;
+    total += qty * price;
+  });
+  document.getElementById('subtotal').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('grand-total').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('total-items').textContent = items.length + ' items';
+  document.getElementById('item-count').textContent = items.length + ' items';
+}
+
+function selectDealer(el) {
+  document.querySelectorAll('.dealer-card').forEach(c => { c.classList.remove('selected'); c.querySelector('svg:last-child') && c.querySelector('svg:last-child').remove(); });
+  el.classList.add('selected');
+}
+
+function placeOrder() {
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = '✓ Order Sent!';
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#000';
+  setTimeout(() => { window.location.href = '09-order-history.html'; }, 900);
+}
+
+updateTotal();
+</script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Onboarding — ApniDukaan</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Theme tokens ── */
+:root {
+  --bg:       #0d0d0d;
+  --surface:  #1a1a1a;
+  --surface2: #2a2a2a;
+  --fg:       #ffffff;
+  --fg-muted: #9ca3af;
+  --border:   #374151;
+  --accent:   #ff6b35;
+  --accent-dk:#e55a2b;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: ui-monospace, 'JetBrains Mono', monospace;
+  --r-sm: 6px; --r-md: 12px; --r-lg: 18px; --r-pill: 100px;
+  --frame-w: 412px; --frame-h: 900px;
+  --status-h: 28px; --nav-h: 48px;
+}
+
+/* Light mode overrides */
+html.light {
+  --bg:       #f8f9fa;
+  --surface:  #ffffff;
+  --surface2: #f1f3f5;
+  --fg:       #111827;
+  --fg-muted: #6b7280;
+  --border:   #e5e7eb;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  transition: background 0.3s;
+}
+
+/* ── Android frame ── */
+.phone-frame {
+  width: var(--frame-w);
+  height: var(--frame-h);
+  background: var(--bg);
+  border-radius: 40px;
+  border: 2px solid #333;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: rgba(0,0,0,0.25) 0 8px 24px, 0 0 0 6px #111;
+  transition: background 0.3s;
+}
+
+/* Status bar */
+.status-bar {
+  height: var(--status-h);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  transition: background 0.3s, color 0.3s;
+}
+.status-bar .punch { width: 10px; height: 10px; background: #111; border-radius: 50%; }
+.status-icons { display: flex; gap: 6px; align-items: center; }
+.status-icons svg { width: 14px; height: 14px; }
+
+/* Android nav */
+.android-nav {
+  height: var(--nav-h);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.android-nav svg { width: 20px; height: 20px; color: var(--fg-muted); }
+
+/* ── Onboarding shell ── */
+.ob-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+.theme-toggle svg { width: 18px; height: 18px; color: var(--fg-muted); transition: color 0.2s; }
+.theme-toggle:hover svg { color: var(--accent); }
+/* Show moon in dark mode, sun in light mode */
+.icon-sun  { display: none; }
+.icon-moon { display: block; }
+html.light .icon-sun  { display: block; }
+html.light .icon-moon { display: none; }
+
+/* Slides container */
+.slides-track {
+  flex: 1;
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide {
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 32px 24px;
+  gap: 0;
+}
+
+/* Illustration area */
+.slide-illustration {
+  width: 100%;
+  height: 260px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Slide 1 — Inventory */
+.illus-1 {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, rgba(255,107,53,0.15) 100%);
+  border: 1px solid rgba(255,107,53,0.2);
+}
+html.light .illus-1 {
+  background: linear-gradient(135deg, #fff3ee 0%, #ffe8dc 100%);
+  border: 1px solid rgba(255,107,53,0.25);
+}
+
+/* Slide 2 — Billing */
+.illus-2 {
+  background: linear-gradient(135deg, #0d1f0d 0%, #1a2e1a 50%, rgba(16,185,129,0.15) 100%);
+  border: 1px solid rgba(16,185,129,0.2);
+}
+html.light .illus-2 {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid rgba(16,185,129,0.25);
+}
+
+/* Slide 3 — AI */
+.illus-3 {
+  background: linear-gradient(135deg, #0d0d1f 0%, #1a1a2e 50%, rgba(59,130,246,0.15) 100%);
+  border: 1px solid rgba(59,130,246,0.2);
+}
+html.light .illus-3 {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid rgba(59,130,246,0.25);
+}
+
+/* SVG illustration icons */
+.illus-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.illus-1 .illus-icon { background: rgba(255,107,53,0.2); }
+.illus-2 .illus-icon { background: rgba(16,185,129,0.2); }
+.illus-3 .illus-icon { background: rgba(59,130,246,0.2); }
+html.light .illus-1 .illus-icon { background: rgba(255,107,53,0.15); }
+html.light .illus-2 .illus-icon { background: rgba(16,185,129,0.15); }
+html.light .illus-3 .illus-icon { background: rgba(59,130,246,0.15); }
+.illus-icon svg { width: 44px; height: 44px; }
+.illus-1 .illus-icon svg { color: var(--accent); }
+.illus-2 .illus-icon svg { color: #10b981; }
+.illus-3 .illus-icon svg { color: #3b82f6; }
+
+/* Floating mini-cards in illustration */
+.illus-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.illus-card .card-val { font-size: 14px; font-weight: 700; }
+.illus-card .card-lbl { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: var(--mono); letter-spacing: 0.5px; text-transform: uppercase; }
+.illus-card.pos-tl { top: 20px; left: 20px; }
+.illus-card.pos-tr { top: 20px; right: 20px; }
+.illus-card.pos-bl { bottom: 20px; left: 20px; }
+.illus-card.pos-br { bottom: 20px; right: 20px; }
+
+/* Slide text */
+.slide-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.slide-1 .slide-tag { color: var(--accent); }
+.slide-2 .slide-tag { color: #10b981; }
+.slide-3 .slide-tag { color: #3b82f6; }
+
+.slide-title {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--fg);
+  margin-bottom: 12px;
+  transition: color 0.3s;
+}
+
+.slide-body {
+  font-size: 15px;
+  color: var(--fg-muted);
+  text-align: center;
+  line-height: 1.6;
+  max-width: 300px;
+  transition: color 0.3s;
+}
+
+/* ── Bottom controls ── */
+.ob-footer {
+  padding: 20px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg);
+  transition: background 0.3s;
+}
+
+/* Dots */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  transition: width 0.3s, background 0.3s;
+  cursor: pointer;
+}
+.dot.active {
+  width: 24px;
+  background: var(--accent);
+}
+
+/* Buttons */
+.ob-btn-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.btn-skip {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-skip:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-next {
+  flex: 2;
+  padding: 14px;
+  border-radius: var(--r-pill);
+  background: var(--accent-dk);
+  border: none;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-next:hover { opacity: 0.9; }
+.btn-next:active { transform: scale(0.97); }
+.btn-next svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="frame">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="18" height="12" rx="2"/><path d="M23 13v-2a2 2 0 0 0 0 4v-2z"/></svg>
+    </div>
+  </div>
+
+  <!-- Onboarding shell -->
+  <div class="ob-shell">
+
+    <!-- Theme toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+      <!-- Sun icon (shown in dark mode) -->
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <!-- Moon icon (shown in light mode) -->
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+
+    <!-- Slides -->
+    <div class="slides-track" id="slidesTrack">
+
+      <!-- Slide 1: Inventory -->
+      <div class="slide slide-1">
+        <div class="slide-illustration illus-1">
+          <div class="illus-card pos-tl">
+            <div class="card-val">247</div>
+            <div class="card-lbl">Products</div>
+          </div>
+          <div class="illus-card pos-tr">
+            <div class="card-val" style="color:#f59e0b">12</div>
+            <div class="card-lbl">Low Stock</div>
+          </div>
+          <div class="illus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div class="illus-card pos-bl">
+            <div class="card-val" style="color:#10b981">+18%</div>
+            <div class="card-lbl">This Week</div>
+          </div>
+          <div class="illus-card pos-br">
+            <div class="card-val">₹84K</div>
+            <div class="card-lbl">Stock Value</div>
+          </div>
+        </div>
+        <div class="slide-tag">Step 1 of 3</div>
+        <div class="slide-title">Smart Inventory<br>at Your Fingertips</div>
+        <div class="slide-body">Scan barcodes to add products instantly. Track stock levels, get low-stock alerts, and never run out of your best sellers.</div>
+      </div>
+
+      <!-- Slide 2: Billing -->
+      <div class="slide slide-2">
+        <div class="slide-illustration illus-2">
+          <div class="illus-card pos-tl">
+            <div class="card-val">₹1,240</div>
+            <div class="card-lbl">Bill Total</div>
+          </div>
+          <div class="illus-card pos-tr">
+            <div class="card-val" style="color:#10b981">Sent</div>
+            <div class="card-lbl">WhatsApp</div>
+          </div>
+          <div class="illus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div class="illus-card pos-bl">
+            <div class="card-val">3 items</div>
+            <div class="card-lbl">In Cart</div>
+          </div>
+          <div class="illus-card pos-br">
+            <div class="card-val">GST 5%</div>
+            <div class="card-lbl">Applied</div>
+          </div>
+        </div>
+        <div class="slide-tag">Step 2 of 3</div>
+        <div class="slide-title">Bill Customers,<br>Send Instantly</div>
+        <div class="slide-body">Create bills in seconds with barcode scanning. Send directly to customers via WhatsApp or SMS — no printer needed.</div>
+      </div>
+
+      <!-- Slide 3: AI + Analytics -->
+      <div class="slide slide-3">
+        <div class="slide-illustration illus-3">
+          <div class="illus-card pos-tl">
+            <div class="card-val" style="color:#3b82f6">AI</div>
+            <div class="card-lbl">Suggestion</div>
+          </div>
+          <div class="illus-card pos-tr">
+            <div class="card-val">↑ 24%</div>
+            <div class="card-lbl">Revenue</div>
+          </div>
+          <div class="illus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="illus-card pos-bl">
+            <div class="card-val">₹52K</div>
+            <div class="card-lbl">This Month</div>
+          </div>
+          <div class="illus-card pos-br">
+            <div class="card-val" style="color:#10b981">Restock</div>
+            <div class="card-lbl">Maggi Noodles</div>
+          </div>
+        </div>
+        <div class="slide-tag">Step 3 of 3</div>
+        <div class="slide-title">AI Insights to<br>Grow Your Business</div>
+        <div class="slide-body">Get smart restock suggestions, pricing tips, and sales trends powered by AI. Order from dealers directly inside the app.</div>
+      </div>
+
+    </div><!-- /slides-track -->
+  </div><!-- /ob-shell -->
+
+  <!-- Footer controls -->
+  <div class="ob-footer" id="obFooter">
+    <div class="dots" id="dots">
+      <div class="dot active" data-idx="0"></div>
+      <div class="dot" data-idx="1"></div>
+      <div class="dot" data-idx="2"></div>
+    </div>
+    <div class="ob-btn-row">
+      <button class="btn-skip" id="btnSkip">Skip</button>
+      <button class="btn-next" id="btnNext">
+        <span id="btnLabel">Next</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="btnIcon">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Android nav -->
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18m-9-9v18"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 19 2 12 11 5 11 19"/></svg>
+  </div>
+</div>
+
+<script>
+const frame = document.getElementById('frame');
+const track = document.getElementById('slidesTrack');
+const dots  = document.querySelectorAll('.dot');
+const btnNext = document.getElementById('btnNext');
+const btnSkip = document.getElementById('btnSkip');
+const btnLabel = document.getElementById('btnLabel');
+const btnIcon  = document.getElementById('btnIcon');
+const themeToggle = document.getElementById('themeToggle');
+
+let current = 0;
+const total = 3;
+
+function goTo(idx) {
+  current = idx;
+  track.style.transform = `translateX(-${current * 100}%)`;
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+
+  const isLast = current === total - 1;
+  btnLabel.textContent = isLast ? 'Get Started' : 'Next';
+  btnIcon.innerHTML = isLast
+    ? '<polyline points="20 6 9 17 4 12"/>'   /* checkmark */
+    : '<polyline points="9 18 15 12 9 6"/>';   /* chevron */
+  btnSkip.style.display = isLast ? 'none' : '';
+}
+
+btnNext.addEventListener('click', () => {
+  if (current < total - 1) {
+    goTo(current + 1);
+  } else {
+    window.location.href = 'login.html';
+  }
+});
+
+btnSkip.addEventListener('click', () => {
+  window.location.href = 'login.html';
+});
+
+dots.forEach(d => {
+  d.addEventListener('click', () => goTo(+d.dataset.idx));
+});
+
+// Light/dark toggle
+themeToggle.addEventListener('click', () => {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('apnidukaan-theme', isLight ? 'light' : 'dark');
+});
+
+// Theme init
+if (localStorage.getItem('apnidukaan-theme') === 'light') {
+  document.documentElement.classList.add('light');
+}
+
+// Swipe support
+let startX = 0;
+track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+track.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - startX;
+  if (dx < -40 && current < total - 1) goTo(current + 1);
+  if (dx > 40  && current > 0)         goTo(current - 1);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Send Bill — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.bill-preview { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:16px; margin-bottom:16px; }
+.bill-header { text-align:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+.bill-header .shop { font-size:16px; font-weight:700; }
+.bill-header .shop-sub { font-size:12px; color:var(--fg-muted); margin-top:2px; }
+.bill-header .bill-no { font-family:var(--mono); font-size:11px; color:var(--accent); margin-top:6px; letter-spacing:1px; }
+.bill-row { display:flex; justify-content:space-between; font-size:13px; padding:5px 0; }
+.bill-row.header { font-size:11px; color:var(--fg-muted); font-family:var(--mono); letter-spacing:0.5px; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:4px; }
+.bill-row.total { font-size:15px; font-weight:700; border-top:1px solid var(--border); padding-top:8px; margin-top:4px; }
+.send-options { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.send-option { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; cursor:pointer; transition:border-color 0.15s; }
+.send-option:hover { border-color:var(--accent); }
+.send-option.selected { border-color:var(--accent); background:rgba(0,237,100,0.05); }
+.so-icon { width:40px; height:40px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.so-info { flex:1; }
+.so-title { font-size:14px; font-weight:600; }
+.so-sub { font-size:12px; color:var(--fg-muted); margin-top:2px; }
+.phone-input-row { display:flex; gap:8px; align-items:center; }
+.phone-input-row input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--fg); font-family:var(--font); font-size:15px; padding:11px 12px; outline:none; }
+.phone-input-row input:focus { border-color:var(--accent); }
+.success-overlay { position:absolute; inset:0; background:var(--bg); z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:32px; }
+.success-overlay .check { width:72px; height:72px; background:rgba(0,237,100,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.success-overlay .check svg { width:36px; height:36px; color:var(--accent); }
+.success-overlay h2 { font-size:22px; font-weight:700; }
+.success-overlay p { font-size:14px; color:var(--fg-muted); line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="phone-frame" style="position:relative">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <a href="05-pos-billing.html" class="back-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="title">Send Bill</div>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body">
+    <!-- Bill preview -->
+    <div class="section-label">Bill Preview</div>
+    <div class="bill-preview">
+      <div class="bill-header">
+        <div class="shop">Ramesh Kirana Store</div>
+        <div class="shop-sub">Main Market, Sector 12, Delhi · +91 98765 43210</div>
+        <div class="bill-no">BILL #1043 · 14 May 2026, 9:41 AM</div>
+      </div>
+      <div class="bill-row header"><span>Item</span><span>Qty</span><span>Amount</span></div>
+      <div class="bill-row"><span>Tata Salt 500g</span><span>1</span><span>₹22</span></div>
+      <div class="bill-row"><span>Fortune Oil 1L</span><span>1</span><span>₹145</span></div>
+      <div class="bill-row"><span>Maggi Noodles 70g</span><span>2</span><span>₹28</span></div>
+      <div class="bill-row" style="color:var(--fg-muted)"><span>GST (5%)</span><span></span><span>₹10</span></div>
+      <div class="bill-row total"><span>Total</span><span></span><span style="color:var(--accent)">₹205</span></div>
+    </div>
+
+    <!-- Customer phone -->
+    <div class="section-label">Customer Phone</div>
+    <div class="phone-input-row" style="margin-bottom:16px">
+      <input type="tel" id="phone" placeholder="+91 98765 43210" value="+91 98765 43210">
+    </div>
+
+    <!-- Send options -->
+    <div class="section-label">Send Via</div>
+    <div class="send-options">
+      <div class="send-option selected" onclick="selectOption(this)">
+        <div class="so-icon" style="background:rgba(37,211,102,0.15)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.985-1.31A9.945 9.945 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        </div>
+        <div class="so-info">
+          <div class="so-title">WhatsApp</div>
+          <div class="so-sub">Send bill as message — most popular</div>
+        </div>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="color:var(--accent)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+
+      <div class="send-option" onclick="selectOption(this)">
+        <div class="so-icon" style="background:rgba(0,108,250,0.12)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#006cfa" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.06 6.06l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+        </div>
+        <div class="so-info">
+          <div class="so-title">SMS</div>
+          <div class="so-sub">Send bill summary via text message</div>
+        </div>
+      </div>
+
+      <div class="send-option" onclick="selectOption(this)">
+        <div class="so-icon" style="background:rgba(255,152,0,0.12)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="so-info">
+          <div class="so-title">Email</div>
+          <div class="so-sub">Send PDF bill to customer's email</div>
+        </div>
+      </div>
+
+      <div class="send-option" onclick="selectOption(this)">
+        <div class="so-icon" style="background:rgba(0,237,100,0.1)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        </div>
+        <div class="so-info">
+          <div class="so-title">Print</div>
+          <div class="so-sub">Print on thermal / A4 printer</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="sendBill()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      Send Bill Now
+    </button>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <h2>Bill Sent!</h2>
+    <p>Bill #1043 sent to<br><strong>+91 98765 43210</strong> via WhatsApp</p>
+    <button class="btn btn-primary" onclick="window.location.href='01-dashboard.html'">Back to Home</button>
+    <button class="btn btn-outline" onclick="window.location.href='05-pos-billing.html'">New Bill</button>
+  </div>
+
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+<script>
+function selectOption(el) {
+  document.querySelectorAll('.send-option').forEach(o => {
+    o.classList.remove('selected');
+    const check = o.querySelector('svg:last-child');
+    if (check && check.querySelector('path[d*="16.17"]')) check.remove();
+  });
+  el.classList.add('selected');
+}
+
+function sendBill() {
+  const phone = document.getElementById('phone').value.trim();
+  if (!phone) { alert('Enter customer phone number'); return; }
+  document.getElementById('success-overlay').style.display = 'flex';
+}
+</script>
+</body>
+</html>

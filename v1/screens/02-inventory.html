@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Inventory — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.stock-summary { display:flex; gap:8px; margin-bottom:14px; }
+.stock-pill { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px; text-align:center; }
+.stock-pill .sp-val { font-size:18px; font-weight:700; }
+.stock-pill .sp-lbl { font-size:10px; color:var(--fg-muted); font-family:var(--mono); letter-spacing:0.5px; text-transform:uppercase; margin-top:2px; }
+.item-thumb { width:40px; height:40px; background:var(--surface2); border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.stock-bar-wrap { height:4px; background:var(--surface2); border-radius:2px; margin-top:6px; overflow:hidden; }
+.stock-bar-fill { height:100%; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="title">Inventory</div>
+    <a href="03-add-product.html" style="background:var(--accent-dk);color:#fff;border:none;border-radius:var(--r-pill);padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add
+    </a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body">
+    <!-- Search -->
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search items or scan barcode…">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2" style="cursor:pointer" onclick="openScanner(c=>document.querySelector('.search-bar input').value=c)"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3M18 21h3M16 16v5M21 21v-2"/></svg>
+    </div>
+
+    <!-- Category chips -->
+    <div class="chip-row">
+      <div class="chip active">All</div>
+      <div class="chip">Grocery</div>
+      <div class="chip">Beverages</div>
+      <div class="chip">Snacks</div>
+      <div class="chip">Personal Care</div>
+    </div>
+
+    <!-- Stock summary -->
+    <div class="stock-summary">
+      <div class="stock-pill"><div class="sp-val">342</div><div class="sp-lbl">Total Items</div></div>
+      <div class="stock-pill"><div class="sp-val" style="color:var(--warn)">5</div><div class="sp-lbl">Low Stock</div></div>
+      <div class="stock-pill"><div class="sp-val" style="color:var(--danger)">2</div><div class="sp-lbl">Out of Stock</div></div>
+    </div>
+
+    <!-- Low stock alert -->
+    <div class="alert alert-warn" style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      Tata Salt (500g) — only 3 units left
+    </div>
+
+    <!-- Item list -->
+    <div class="section-label">All Products</div>
+    <div class="card" style="padding:0 14px">
+
+      <div class="list-item">
+        <div class="item-thumb">🧂</div>
+        <div class="item-info">
+          <div class="item-name">Tata Salt 500g</div>
+          <div class="item-sub">Barcode: 8901030874628</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:12%;background:var(--danger)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹22</div>
+          <div class="item-stock"><span class="badge badge-red">3 left</span></div>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="item-thumb">🛢️</div>
+        <div class="item-info">
+          <div class="item-name">Fortune Sunflower Oil 1L</div>
+          <div class="item-sub">Barcode: 8906002480012</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:60%;background:var(--accent-dk)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹145</div>
+          <div class="item-stock"><span class="badge badge-green">24 left</span></div>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="item-thumb">🍚</div>
+        <div class="item-info">
+          <div class="item-name">India Gate Basmati 1kg</div>
+          <div class="item-sub">Barcode: 8901719110023</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:35%;background:var(--warn)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹120</div>
+          <div class="item-stock"><span class="badge badge-warn">8 left</span></div>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="item-thumb">🧴</div>
+        <div class="item-info">
+          <div class="item-name">Dove Soap 100g</div>
+          <div class="item-sub">Barcode: 8901058851019</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:80%;background:var(--accent-dk)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹48</div>
+          <div class="item-stock"><span class="badge badge-green">32 left</span></div>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="item-thumb">🥤</div>
+        <div class="item-info">
+          <div class="item-name">Coca-Cola 600ml</div>
+          <div class="item-sub">Barcode: 8901030874635</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:0%;background:var(--danger)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹40</div>
+          <div class="item-stock"><span class="badge badge-red">Out</span></div>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="item-thumb">🍜</div>
+        <div class="item-info">
+          <div class="item-name">Maggi Noodles 70g</div>
+          <div class="item-sub">Barcode: 8901491503009</div>
+          <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:90%;background:var(--accent-dk)"></div></div>
+        </div>
+        <div class="item-right">
+          <div class="item-price">₹14</div>
+          <div class="item-stock"><span class="badge badge-green">56 left</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <a href="03-add-product.html" class="fab">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </a>
+
+  <nav class="bottom-nav">
+    <a href="01-dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></a>
+    <a href="02-inventory.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventory</span></a>
+    <a href="05-pos-billing.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Billing</span></a>
+    <a href="07-analytics.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a href="10-settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+
+  <!-- Scanner overlay -->
+  <div id="scanner-overlay" class="scanner-overlay" style="display:none">
+    <div class="scanner-close" onclick="closeScanner()">✕</div>
+    <div class="scanner-viewport">
+      <div class="scanner-line"></div>
+      <div class="scanner-corner tl"></div><div class="scanner-corner tr"></div>
+      <div class="scanner-corner bl"></div><div class="scanner-corner br"></div>
+    </div>
+    <div class="scanner-label">Point camera at barcode<br><span style="font-size:12px;color:var(--fg-muted)">Scanning automatically…</span></div>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+</body>
+</html>

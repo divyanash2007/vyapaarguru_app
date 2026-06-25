@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ApniDukaan — Design Prototype</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0d0d;
+  --surface:  #1a1a1a;
+  --surface2: #2a2a2a;
+  --fg:       #ffffff;
+  --muted:    #9ca3af;
+  --border:   #374151;
+  --accent:   #ff6b35;
+  --accent-dk:#e55a2b;
+  --blue:     #3b82f6;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: ui-monospace, 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  padding: 32px 40px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 40px; height: 40px;
+  background: var(--accent-dk);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark svg { width: 22px; height: 22px; color: #fff; }
+.logo-name { font-size: 22px; font-weight: 700; }
+.logo-name span { color: var(--accent); }
+.header-meta { font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ── Hero ── */
+.hero {
+  padding: 48px 40px 32px;
+  max-width: 900px;
+}
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.hero h1 em { color: var(--accent); font-style: normal; }
+.hero p {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 560px;
+  margin-bottom: 24px;
+}
+.hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.hbadge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.hbadge svg { width: 14px; height: 14px; }
+.hbadge.orange { border-color: rgba(255,107,53,0.3); color: var(--accent); background: rgba(255,107,53,0.06); }
+
+/* ── Screen grid ── */
+.screens-section {
+  padding: 0 40px 60px;
+}
+.screens-section h2 {
+  font-size: 13px;
+  font-family: var(--mono);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.screen-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color 0.15s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.screen-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.screen-thumb {
+  height: 120px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.screen-thumb svg { width: 40px; height: 40px; opacity: 0.4; }
+.screen-thumb .thumb-num {
+  position: absolute;
+  top: 10px; left: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.screen-thumb .scan-badge {
+  position: absolute;
+  bottom: 8px; right: 8px;
+  background: rgba(255,107,53,0.15);
+  border: 1px solid rgba(255,107,53,0.3);
+  border-radius: 100px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.screen-info {
+  padding: 12px 14px 14px;
+  flex: 1;
+}
+.screen-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.screen-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.screen-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+/* Thumb accent colors per screen */
+.t1 { background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%); }
+.t2 { background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); }
+.t3 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.15) 100%); }
+.t4 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(59,130,246,0.15) 100%); }
+.t5 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.1) 100%); }
+.t6 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(16,185,129,0.12) 100%); }
+.t7 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.2) 100%); }
+.t8 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.25) 100%); }
+.t9 { background: linear-gradient(135deg, #1a1a1a 0%, rgba(59,130,246,0.12) 100%); }
+.t10 { background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); }
+
+/* ── Flow section ── */
+.flow-section {
+  padding: 0 40px 60px;
+}
+.flow-section h2 {
+  font-size: 13px;
+  font-family: var(--mono);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.flow-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+  min-width: 80px;
+}
+.flow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color 0.15s;
+}
+.flow-step:hover { border-color: var(--accent); color: var(--accent); }
+.flow-step.scan { border-color: rgba(0,237,100,0.3); color: var(--accent); }
+.flow-arrow { color: var(--border); font-size: 14px; }
+
+/* ── Footer ── */
+footer {
+  padding: 24px 40px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+footer p { font-size: 12px; color: var(--muted); }
+footer .version { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+/* Light mode */
+html.light { --bg:#f8f9fa; --surface:#ffffff; --surface2:#f1f3f5; --fg:#111827; --muted:#6b7280; --border:#e5e7eb; }
+html.light .t1,html.light .t2,html.light .t3,html.light .t4,html.light .t5,html.light .t6,html.light .t7,html.light .t8,html.light .t9,html.light .t10 { background: var(--surface); }
+
+/* Toggle button */
+.theme-toggle { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.15s; flex-shrink: 0; }
+.theme-toggle:hover { border-color: var(--accent); }
+.theme-toggle svg { width: 16px; height: 16px; color: var(--muted); }
+.theme-toggle .icon-sun { display: none; }
+html.light .theme-toggle .icon-sun { display: block; }
+html.light .theme-toggle .icon-moon { display: none; }
+
+@media (max-width: 600px) {
+  header, .hero, .screens-section, .flow-section, footer { padding-left: 20px; padding-right: 20px; }
+  .hero { padding-top: 32px; }
+  .screen-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </div>
+    <div class="logo-name">Apni<span>Dukaan</span></div>
+  </div>
+  <div class="header-meta">Android Prototype · 10 Screens</div>
+  <button class="theme-toggle" aria-label="Toggle theme" onclick="(function(){var h=document.documentElement;var isLight=h.classList.toggle('light');localStorage.setItem('apnidukaan-theme',isLight?'light':'dark');})()">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </button>
+</header>
+
+<section class="hero">
+  <div class="hero-tag">Mobile App Prototype</div>
+  <h1>Manage your shop.<br><em>Grow your business.</em></h1>
+  <p>A complete inventory + retail management app for small shopkeepers — with barcode scanning, dealer ordering, customer billing, AI suggestions, and analytics.</p>
+  <div class="hero-badges">
+    <div class="hbadge orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3M18 21h3M16 16v5M21 21v-2"/></svg>
+      Barcode Scanning
+    </div>
+    <div class="hbadge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      AI Suggestions
+    </div>
+    <div class="hbadge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      WhatsApp Billing
+    </div>
+    <div class="hbadge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Sales Analytics
+    </div>
+  </div>
+</section>
+
+<section class="screens-section">
+  <h2>App Experience</h2>
+  <div class="screen-grid">
+
+    <a href="splash.html" class="screen-card">
+      <div class="screen-thumb" style="background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.2) 100%);">
+        <span class="thumb-num">00</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SPLASH</div>
+        <div class="screen-name">App Launch</div>
+        <div class="screen-desc">Animated splash screen with auto-redirect to dashboard</div>
+      </div>
+    </a>
+
+    <a href="onboarding.html" class="screen-card">
+      <div class="screen-thumb" style="background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.18) 100%);">
+        <span class="thumb-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/><path d="M8 3.93A9 9 0 0 1 21 12"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">ONBOARDING</div>
+        <div class="screen-name">Walkthrough</div>
+        <div class="screen-desc">3-slide feature intro with light/dark toggle and swipe</div>
+      </div>
+    </a>
+
+    <a href="login.html" class="screen-card">
+      <div class="screen-thumb" style="background: linear-gradient(135deg, #1a1a1a 0%, rgba(255,107,53,0.25) 100%);">
+        <span class="thumb-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">LOGIN</div>
+        <div class="screen-name">Authentication</div>
+        <div class="screen-desc">4-step onboarding: phone, OTP, shop setup, welcome</div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<section class="screens-section">
+  <h2>All Screens</h2>
+  <div class="screen-grid">
+
+    <a href="screens/01-dashboard.html" class="screen-card">
+      <div class="screen-thumb t1">
+        <span class="thumb-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 01</div>
+        <div class="screen-name">Dashboard</div>
+        <div class="screen-desc">Sales overview, alerts, quick actions, recent transactions</div>
+      </div>
+    </a>
+
+    <a href="screens/02-inventory.html" class="screen-card">
+      <div class="screen-thumb t2">
+        <span class="thumb-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 02</div>
+        <div class="screen-name">Inventory</div>
+        <div class="screen-desc">Product list, stock levels, search, category filters</div>
+      </div>
+    </a>
+
+    <a href="screens/03-add-product.html" class="screen-card">
+      <div class="screen-thumb t3">
+        <span class="thumb-num">03</span>
+        <div class="scan-badge">SCAN</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 03</div>
+        <div class="screen-name">Add Product</div>
+        <div class="screen-desc">Barcode scan to auto-fill, pricing, stock, category</div>
+      </div>
+    </a>
+
+    <a href="screens/04-dealer-order.html" class="screen-card">
+      <div class="screen-thumb t4">
+        <span class="thumb-num">04</span>
+        <div class="scan-badge">SCAN</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 04</div>
+        <div class="screen-name">Dealer Order</div>
+        <div class="screen-desc">Select dealer, scan/add items, send order directly</div>
+      </div>
+    </a>
+
+    <a href="screens/05-pos-billing.html" class="screen-card">
+      <div class="screen-thumb t5">
+        <span class="thumb-num">05</span>
+        <div class="scan-badge">SCAN</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 05</div>
+        <div class="screen-name">POS Billing</div>
+        <div class="screen-desc">Scan items, live cart, GST, discount, collect payment</div>
+      </div>
+    </a>
+
+    <a href="screens/06-send-bill.html" class="screen-card">
+      <div class="screen-thumb t6">
+        <span class="thumb-num">06</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 06</div>
+        <div class="screen-name">Send Bill</div>
+        <div class="screen-desc">Bill preview, WhatsApp / SMS / Email / Print options</div>
+      </div>
+    </a>
+
+    <a href="screens/07-analytics.html" class="screen-card">
+      <div class="screen-thumb t7">
+        <span class="thumb-num">07</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 07</div>
+        <div class="screen-name">Analytics</div>
+        <div class="screen-desc">Daily/weekly/monthly charts, category breakdown, top items</div>
+      </div>
+    </a>
+
+    <a href="screens/08-llm-suggestions.html" class="screen-card">
+      <div class="screen-thumb t8">
+        <span class="thumb-num">08</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm0-14a6 6 0 0 0-6 6h2a4 4 0 0 1 4-4zm0 2a4 4 0 0 0-4 4h2a2 2 0 0 1 2-2z"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 08</div>
+        <div class="screen-name">AI Suggestions</div>
+        <div class="screen-desc">DukaanAI: restock alerts, pricing tips, seasonal trends</div>
+      </div>
+    </a>
+
+    <a href="screens/09-order-history.html" class="screen-card">
+      <div class="screen-thumb t9">
+        <span class="thumb-num">09</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 09</div>
+        <div class="screen-name">Order History</div>
+        <div class="screen-desc">Customer bills + dealer orders, status, detail view</div>
+      </div>
+    </a>
+
+    <a href="screens/10-settings.html" class="screen-card">
+      <div class="screen-thumb t10">
+        <span class="thumb-num">10</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div class="screen-info">
+        <div class="screen-num">SCREEN 10</div>
+        <div class="screen-name">Settings</div>
+        <div class="screen-desc">Shop profile, billing config, notifications, plan</div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<section class="flow-section">
+  <h2>Key User Flows</h2>
+
+  <div class="flow-row">
+    <span class="flow-label">Add Stock</span>
+    <a href="screens/02-inventory.html" class="flow-step">Inventory</a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/03-add-product.html" class="flow-step scan">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/></svg>
+      Scan Barcode
+    </a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/03-add-product.html" class="flow-step">Save Product</a>
+  </div>
+
+  <div class="flow-row">
+    <span class="flow-label">Sell & Bill</span>
+    <a href="screens/05-pos-billing.html" class="flow-step scan">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/></svg>
+      Scan Items
+    </a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/05-pos-billing.html" class="flow-step">Collect Payment</a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/06-send-bill.html" class="flow-step">Send via WhatsApp</a>
+  </div>
+
+  <div class="flow-row">
+    <span class="flow-label">Reorder</span>
+    <a href="screens/08-llm-suggestions.html" class="flow-step">AI Alert</a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/04-dealer-order.html" class="flow-step scan">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/></svg>
+      Scan & Order
+    </a>
+    <span class="flow-arrow">→</span>
+    <a href="screens/09-order-history.html" class="flow-step">Track Order</a>
+  </div>
+</section>
+
+<footer>
+  <p>ApniDukaan · Android prototype · India market · Wireframe fidelity</p>
+  <span class="version">v1.0 · May 2026</span>
+</footer>
+
+<script>if (localStorage.getItem('apnidukaan-theme') === 'light') document.documentElement.classList.add('light');</script>
+</body>
+</html>

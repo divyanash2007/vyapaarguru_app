@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Analytics — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.period-tabs { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-pill); padding:3px; margin-bottom:16px; }
+.period-tab { flex:1; text-align:center; padding:7px; border-radius:var(--r-pill); font-size:12px; font-weight:500; cursor:pointer; color:var(--fg-muted); transition:all 0.15s; }
+.period-tab.active { background:var(--accent-dk); color:#fff; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; margin-bottom:12px; }
+.chart-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+.chart-sub { font-size:11px; color:var(--fg-muted); margin-bottom:12px; }
+.bar-chart-full { display:flex; align-items:flex-end; gap:5px; height:90px; }
+.bcf-bar { flex:1; border-radius:4px 4px 0 0; position:relative; cursor:pointer; transition:opacity 0.15s; }
+.bcf-bar:hover { opacity:0.8; }
+.bcf-label { font-size:9px; color:var(--fg-muted); text-align:center; margin-top:4px; font-family:var(--mono); }
+.bcf-wrap { flex:1; display:flex; flex-direction:column; }
+.line-chart { height:80px; position:relative; margin-bottom:4px; }
+.line-chart svg { width:100%; height:100%; }
+.top-items .ti-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.top-items .ti-row:last-child { border-bottom:none; }
+.ti-rank { width:20px; font-size:12px; font-weight:700; color:var(--fg-muted); font-family:var(--mono); }
+.ti-bar-wrap { flex:1; }
+.ti-name { font-size:13px; font-weight:500; margin-bottom:4px; }
+.ti-bar { height:4px; background:var(--accent-dk); border-radius:2px; }
+.ti-val { font-size:13px; font-weight:600; min-width:52px; text-align:right; }
+.kpi-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; }
+.kpi { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px; text-align:center; }
+.kpi-val { font-size:16px; font-weight:700; }
+.kpi-lbl { font-size:10px; color:var(--fg-muted); font-family:var(--mono); letter-spacing:0.3px; text-transform:uppercase; margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="title">Analytics</div>
+    <a href="08-llm-suggestions.html" style="background:rgba(0,237,100,0.1);border:1px solid rgba(0,237,100,0.3);color:var(--accent);border-radius:var(--r-pill);padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:4px;">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V15a1 1 0 0 0-2 0v1.93A8 8 0 0 1 4.07 11H6a1 1 0 0 0 0-2H4.07A8 8 0 0 1 11 4.07V6a1 1 0 0 0 2 0V4.07A8 8 0 0 1 19.93 11H18a1 1 0 0 0 0 2h1.93A8 8 0 0 1 13 16.93z"/></svg>
+      AI Tips
+    </a>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body">
+    <!-- Period selector -->
+    <div class="period-tabs">
+      <div class="period-tab">Today</div>
+      <div class="period-tab active">Week</div>
+      <div class="period-tab">Month</div>
+      <div class="period-tab">Year</div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-val">₹28.4K</div><div class="kpi-lbl">Revenue</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--accent)">₹6.2K</div><div class="kpi-lbl">Profit</div></div>
+      <div class="kpi"><div class="kpi-val">142</div><div class="kpi-lbl">Orders</div></div>
+    </div>
+
+    <!-- Sales bar chart -->
+    <div class="chart-card">
+      <div class="chart-title">Daily Sales</div>
+      <div class="chart-sub">This week · ₹28,400 total</div>
+      <div class="bar-chart-full">
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:45%;background:var(--surface2)"></div><div class="bcf-label">Mon</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:60%;background:var(--surface2)"></div><div class="bcf-label">Tue</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:38%;background:var(--surface2)"></div><div class="bcf-label">Wed</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:75%;background:var(--surface2)"></div><div class="bcf-label">Thu</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:90%;background:var(--surface2)"></div><div class="bcf-label">Fri</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:100%;background:var(--accent-dk)"></div><div class="bcf-label">Sat</div></div>
+        <div class="bcf-wrap"><div class="bcf-bar" style="height:55%;background:var(--surface2)"></div><div class="bcf-label">Sun</div></div>
+      </div>
+    </div>
+
+    <!-- Revenue trend line -->
+    <div class="chart-card">
+      <div class="chart-title">Revenue Trend</div>
+      <div class="chart-sub">Last 4 weeks · ↑ 14% growth</div>
+      <div class="line-chart">
+        <svg viewBox="0 0 300 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00684a" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#00684a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,65 L50,55 L100,48 L150,40 L200,30 L250,18 L300,8" fill="none" stroke="#00ed64" stroke-width="2"/>
+          <path d="M0,65 L50,55 L100,48 L150,40 L200,30 L250,18 L300,8 L300,80 L0,80 Z" fill="url(#lineGrad)"/>
+          <circle cx="300" cy="8" r="4" fill="#00ed64"/>
+        </svg>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--fg-muted);font-family:var(--mono)">
+        <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
+      </div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="chart-card">
+      <div class="chart-title">Sales by Category</div>
+      <div class="chart-sub">This week</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <svg viewBox="0 0 80 80" width="80" height="80" style="flex-shrink:0">
+          <circle cx="40" cy="40" r="30" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#00684a" stroke-width="14" stroke-dasharray="75 113" stroke-dashoffset="-28"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#006cfa" stroke-width="14" stroke-dasharray="34 154" stroke-dashoffset="-103"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="var(--warn)" stroke-width="14" stroke-dasharray="20 168" stroke-dashoffset="-137"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="var(--danger)" stroke-width="14" stroke-dasharray="15 173" stroke-dashoffset="-157"/>
+        </svg>
+        <div style="flex:1;font-size:12px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#00684a;border-radius:2px;flex-shrink:0"></span><span style="flex:1">Grocery</span><span style="font-weight:600">40%</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#006cfa;border-radius:2px;flex-shrink:0"></span><span style="flex:1">Beverages</span><span style="font-weight:600">22%</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--warn);border-radius:2px;flex-shrink:0"></span><span style="flex:1">Snacks</span><span style="font-weight:600">18%</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--danger);border-radius:2px;flex-shrink:0"></span><span style="flex:1">Personal Care</span><span style="font-weight:600">12%</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--surface2);border-radius:2px;flex-shrink:0"></span><span style="flex:1">Other</span><span style="font-weight:600">8%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top selling items -->
+    <div class="chart-card">
+      <div class="chart-title">Top Selling Items</div>
+      <div class="chart-sub">By revenue this week</div>
+      <div class="top-items">
+        <div class="ti-row">
+          <div class="ti-rank">#1</div>
+          <div class="ti-bar-wrap">
+            <div class="ti-name">Fortune Sunflower Oil 1L</div>
+            <div class="ti-bar" style="width:100%"></div>
+          </div>
+          <div class="ti-val">₹4,350</div>
+        </div>
+        <div class="ti-row">
+          <div class="ti-rank">#2</div>
+          <div class="ti-bar-wrap">
+            <div class="ti-name">India Gate Basmati 1kg</div>
+            <div class="ti-bar" style="width:72%"></div>
+          </div>
+          <div class="ti-val">₹3,120</div>
+        </div>
+        <div class="ti-row">
+          <div class="ti-rank">#3</div>
+          <div class="ti-bar-wrap">
+            <div class="ti-name">Maggi Noodles 70g</div>
+            <div class="ti-bar" style="width:55%"></div>
+          </div>
+          <div class="ti-val">₹2,380</div>
+        </div>
+        <div class="ti-row">
+          <div class="ti-rank">#4</div>
+          <div class="ti-bar-wrap">
+            <div class="ti-name">Dove Soap 100g</div>
+            <div class="ti-bar" style="width:40%"></div>
+          </div>
+          <div class="ti-val">₹1,728</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="01-dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></a>
+    <a href="02-inventory.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventory</span></a>
+    <a href="05-pos-billing.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Billing</span></a>
+    <a href="07-analytics.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a href="10-settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+<script>
+document.querySelectorAll('.period-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

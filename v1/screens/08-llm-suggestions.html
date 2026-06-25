@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>AI Suggestions — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.ai-header { background:linear-gradient(135deg,var(--surface) 0%,rgba(0,104,74,0.2) 100%); border:1px solid rgba(0,237,100,0.2); border-radius:var(--r-lg); padding:16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.ai-avatar { width:48px; height:48px; background:rgba(0,237,100,0.12); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ai-avatar svg { width:26px; height:26px; color:var(--accent); }
+.ai-title { font-size:16px; font-weight:700; }
+.ai-sub { font-size:12px; color:var(--fg-muted); margin-top:2px; }
+.ai-pulse { width:8px; height:8px; background:var(--accent); border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.filter-row { display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+.filter-row::-webkit-scrollbar { display:none; }
+.s-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.insight-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.insight-row:last-child { border-bottom:none; }
+.insight-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.chat-input-row { display:flex; gap:8px; padding:10px 16px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; }
+.chat-input-row input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-pill); color:var(--fg); font-family:var(--font); font-size:14px; padding:10px 14px; outline:none; }
+.chat-input-row input:focus { border-color:var(--accent); }
+.chat-input-row button { background:var(--accent-dk); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="phone-frame" style="display:flex;flex-direction:column">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <a href="01-dashboard.html" class="back-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="title">AI Suggestions</div>
+    <div class="ai-pulse"></div>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body" style="flex:1">
+    <!-- AI header -->
+    <div class="ai-header">
+      <div class="ai-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm0-14a6 6 0 0 0-6 6h2a4 4 0 0 1 4-4zm0 2a4 4 0 0 0-4 4h2a2 2 0 0 1 2-2z"/></svg>
+      </div>
+      <div>
+        <div class="ai-title">DukaanAI</div>
+        <div class="ai-sub">Analysed your last 30 days · 6 insights ready</div>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="filter-row">
+      <div class="chip active">All</div>
+      <div class="chip">Restock</div>
+      <div class="chip">Pricing</div>
+      <div class="chip">Trends</div>
+      <div class="chip">Savings</div>
+    </div>
+
+    <!-- Suggestion cards -->
+    <div class="suggestion-card">
+      <div class="s-tag">🔴 Urgent · Restock</div>
+      <div class="s-title">Reorder Tata Salt & Coca-Cola now</div>
+      <div class="s-body">These 2 items are out of stock or critically low. Based on your sales pattern, you sell ~8 units/day. You'll lose ₹320/day in revenue if not restocked.</div>
+      <div class="s-actions">
+        <a href="04-dealer-order.html" class="btn btn-primary btn-sm">Order Now</a>
+        <button class="btn btn-outline btn-sm">Dismiss</button>
+      </div>
+    </div>
+
+    <div class="suggestion-card">
+      <div class="s-tag">💰 Pricing · Opportunity</div>
+      <div class="s-title">Raise Fortune Oil price by ₹5</div>
+      <div class="s-body">Nearby shops sell Fortune Oil at ₹150. Your price is ₹145. Raising to ₹150 could add ₹750/month in profit with no impact on demand.</div>
+      <div class="s-actions">
+        <button class="btn btn-primary btn-sm" onclick="this.textContent='✓ Applied'">Apply Price</button>
+        <button class="btn btn-outline btn-sm">See Details</button>
+      </div>
+    </div>
+
+    <div class="suggestion-card">
+      <div class="s-tag">📈 Trend · Seasonal</div>
+      <div class="s-title">Stock up on cold drinks before summer</div>
+      <div class="s-body">May–June sees 3× higher beverage sales. Last year you ran out of Coca-Cola and Limca in week 2. Order 2× your usual quantity this week.</div>
+      <div class="s-actions">
+        <a href="04-dealer-order.html" class="btn btn-primary btn-sm">Plan Order</a>
+        <button class="btn btn-outline btn-sm">Remind Later</button>
+      </div>
+    </div>
+
+    <div class="suggestion-card">
+      <div class="s-tag">💡 Savings · Bulk Buy</div>
+      <div class="s-title">Buy Maggi in bulk — save ₹1.50/pack</div>
+      <div class="s-body">Sharma Traders offers ₹12.50/pack for orders of 100+. You sell 56 packs/week. Buying 200 packs saves ₹300 and covers 3.5 weeks.</div>
+      <div class="s-actions">
+        <button class="btn btn-primary btn-sm" onclick="this.textContent='✓ Added to Order'">Add to Order</button>
+        <button class="btn btn-outline btn-sm">Skip</button>
+      </div>
+    </div>
+
+    <!-- Quick insights -->
+    <div class="section-label" style="margin-top:4px">Quick Insights</div>
+    <div class="card" style="padding:0 14px">
+      <div class="insight-row">
+        <div class="insight-icon" style="background:rgba(0,237,100,0.1)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <span style="flex:1">Saturday is your best day — 40% more sales</span>
+      </div>
+      <div class="insight-row">
+        <div class="insight-icon" style="background:rgba(0,108,250,0.1)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span style="flex:1">Peak hours: 8–10 AM and 5–7 PM</span>
+      </div>
+      <div class="insight-row">
+        <div class="insight-icon" style="background:rgba(255,152,0,0.1)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span style="flex:1">12 repeat customers this week</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat input -->
+  <div class="chat-input-row">
+    <input type="text" placeholder="Ask DukaanAI anything…" id="ai-input">
+    <button onclick="sendAI()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+<script>
+function sendAI() {
+  const input = document.getElementById('ai-input');
+  if (!input.value.trim()) return;
+  input.value = '';
+  // Simulate thinking
+  input.placeholder = 'DukaanAI is thinking…';
+  setTimeout(() => { input.placeholder = 'Ask DukaanAI anything…'; }, 1500);
+}
+</script>
+</body>
+</html>

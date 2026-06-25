@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Order History — ApniDukaan</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.tab-bar { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-pill); padding:3px; margin-bottom:14px; }
+.tab { flex:1; text-align:center; padding:8px; border-radius:var(--r-pill); font-size:13px; font-weight:500; cursor:pointer; color:var(--fg-muted); transition:all 0.15s; }
+.tab.active { background:var(--accent-dk); color:#fff; }
+.order-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; margin-bottom:10px; cursor:pointer; transition:border-color 0.15s; }
+.order-card:hover { border-color:var(--accent); }
+.order-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.order-id { font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:0.5px; }
+.order-name { font-size:14px; font-weight:600; margin-top:2px; }
+.order-items-preview { font-size:12px; color:var(--fg-muted); margin-top:4px; }
+.order-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+.order-total { font-size:15px; font-weight:700; }
+.order-date { font-size:11px; color:var(--fg-muted); }
+/* Detail sheet */
+.detail-sheet { position:absolute; inset:0; background:var(--bg); z-index:50; display:none; flex-direction:column; }
+.detail-sheet.open { display:flex; }
+.detail-body { flex:1; overflow-y:auto; padding:16px; scrollbar-width:none; }
+.detail-body::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+<div class="phone-frame" style="position:relative">
+  <div class="status-bar">
+    <span>9:41</span><div class="punch"></div>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <a href="01-dashboard.html" class="back-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="title">Order History</div>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+
+  <div class="screen-body">
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(this,'sales')">Customer Sales</div>
+      <div class="tab" onclick="switchTab(this,'dealer')">Dealer Orders</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search by name, bill no…">
+    </div>
+
+    <!-- Sales tab content -->
+    <div id="tab-sales">
+      <div class="order-card" onclick="openDetail('bill')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">BILL #1043</div>
+            <div class="order-name">Priya Sharma</div>
+          </div>
+          <span class="badge badge-green">Paid</span>
+        </div>
+        <div class="order-items-preview">Tata Salt, Fortune Oil, Maggi × 2</div>
+        <div class="order-bottom">
+          <div class="order-total">₹205</div>
+          <div class="order-date">Today, 9:38 AM · WhatsApp sent</div>
+        </div>
+      </div>
+
+      <div class="order-card" onclick="openDetail('bill')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">BILL #1042</div>
+            <div class="order-name">Walk-in Customer</div>
+          </div>
+          <span class="badge badge-green">Paid</span>
+        </div>
+        <div class="order-items-preview">Dove Soap, Coca-Cola × 3</div>
+        <div class="order-bottom">
+          <div class="order-total">₹340</div>
+          <div class="order-date">Today, 9:12 AM</div>
+        </div>
+      </div>
+
+      <div class="order-card" onclick="openDetail('bill')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">BILL #1041</div>
+            <div class="order-name">Mohan Lal</div>
+          </div>
+          <span class="badge badge-warn">Pending</span>
+        </div>
+        <div class="order-items-preview">India Gate Basmati 2kg, Fortune Oil × 2</div>
+        <div class="order-bottom">
+          <div class="order-total">₹620</div>
+          <div class="order-date">Yesterday, 6:45 PM</div>
+        </div>
+      </div>
+
+      <div class="order-card" onclick="openDetail('bill')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">BILL #1040</div>
+            <div class="order-name">Sunita Devi</div>
+          </div>
+          <span class="badge badge-green">Paid</span>
+        </div>
+        <div class="order-items-preview">Maggi × 5, Tata Salt, Dove Soap</div>
+        <div class="order-bottom">
+          <div class="order-total">₹185</div>
+          <div class="order-date">Yesterday, 4:20 PM · SMS sent</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dealer tab content (hidden) -->
+    <div id="tab-dealer" style="display:none">
+      <div class="order-card" onclick="openDetail('dealer')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">ORDER #D-88</div>
+            <div class="order-name">Sharma Traders</div>
+          </div>
+          <span class="badge badge-blue">Delivered</span>
+        </div>
+        <div class="order-items-preview">Tata Salt ×12, India Gate ×10, Coca-Cola ×24</div>
+        <div class="order-bottom">
+          <div class="order-total">₹1,704</div>
+          <div class="order-date">Today, 8:30 AM</div>
+        </div>
+      </div>
+
+      <div class="order-card" onclick="openDetail('dealer')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">ORDER #D-87</div>
+            <div class="order-name">Gupta Wholesale</div>
+          </div>
+          <span class="badge badge-warn">In Transit</span>
+        </div>
+        <div class="order-items-preview">Maggi ×200, Coca-Cola ×48</div>
+        <div class="order-bottom">
+          <div class="order-total">₹4,420</div>
+          <div class="order-date">Yesterday, 3:00 PM · ETA: Tomorrow</div>
+        </div>
+      </div>
+
+      <div class="order-card" onclick="openDetail('dealer')">
+        <div class="order-top">
+          <div>
+            <div class="order-id">ORDER #D-86</div>
+            <div class="order-name">Sharma Traders</div>
+          </div>
+          <span class="badge badge-blue">Delivered</span>
+        </div>
+        <div class="order-items-preview">Fortune Oil ×30, Dove Soap ×50</div>
+        <div class="order-bottom">
+          <div class="order-total">₹6,300</div>
+          <div class="order-date">11 May 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order detail sheet -->
+  <div class="detail-sheet" id="detail-sheet">
+    <div class="status-bar"><span>9:41</span><div class="punch"></div></div>
+    <div class="top-bar">
+      <button class="back-btn" onclick="closeDetail()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="title" id="detail-title">Bill #1043</div>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+</div>
+<script src="../js/shared.js"></script>
+<script>
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-sales').style.display = tab === 'sales' ? 'block' : 'none';
+  document.getElementById('tab-dealer').style.display = tab === 'dealer' ? 'block' : 'none';
+}
+
+function openDetail(type) {
+  const sheet = document.getElementById('detail-sheet');
+  const body = document.getElementById('detail-body');
+  if (type === 'bill') {
+    document.getElementById('detail-title').textContent = 'Bill #1043';
+    body.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <div><div style="font-size:16px;font-weight:700">Priya Sharma</div><div style="font-size:12px;color:var(--fg-muted)">+91 98765 43210</div></div>
+          <span class="badge badge-green">Paid</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--fg-muted);letter-spacing:1px">BILL #1043 · 14 May 2026, 9:38 AM</div>
+      </div>
+      <div class="section-label">Items</div>
+      <div class="card" style="padding:0 14px;margin-bottom:12px">
+        <div class="bill-line"><span>Tata Salt 500g × 1</span><span>₹22</span></div>
+        <div class="bill-line"><span>Fortune Oil 1L × 1</span><span>₹145</span></div>
+        <div class="bill-line"><span>Maggi Noodles × 2</span><span>₹28</span></div>
+        <div class="bill-line" style="color:var(--fg-muted)"><span>GST (5%)</span><span>₹10</span></div>
+        <div class="bill-total"><span>Total</span><span style="color:var(--accent)">₹205</span></div>
+      </div>
+      <div class="section-label">Delivery</div>
+      <div class="timeline">
+        <div class="timeline-item done"><div class="t-label">Bill Created</div><div class="t-time">9:38 AM</div></div>
+        <div class="timeline-item done"><div class="t-label">Sent via WhatsApp</div><div class="t-time">9:38 AM</div></div>
+        <div class="timeline-item done"><div class="t-label">Payment Received</div><div class="t-time">9:40 AM · Cash</div></div>
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn btn-outline btn-full" onclick="window.location.href='06-send-bill.html'">Resend Bill</button>
+      <div style="height:16px"></div>`;
+  } else {
+    document.getElementById('detail-title').textContent = 'Order #D-88';
+    body.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <div><div style="font-size:16px;font-weight:700">Sharma Traders</div><div style="font-size:12px;color:var(--fg-muted)">Grocery & FMCG Dealer</div></div>
+          <span class="badge badge-blue">Delivered</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--fg-muted);letter-spacing:1px">ORDER #D-88 · 14 May 2026, 8:30 AM</div>
+      </div>
+      <div class="section-label">Items Ordered</div>
+      <div class="card" style="padding:0 14px;margin-bottom:12px">
+        <div class="bill-line"><span>Tata Salt 500g × 12</span><span>₹216</span></div>
+        <div class="bill-line"><span>India Gate Basmati × 10</span><span>₹1,050</span></div>
+        <div class="bill-line"><span>Coca-Cola 600ml × 24</span><span>₹768</span></div>
+        <div class="bill-total"><span>Total</span><span>₹1,704</span></div>
+      </div>
+      <div class="section-label">Status</div>
+      <div class="timeline">
+        <div class="timeline-item done"><div class="t-label">Order Placed</div><div class="t-time">8:30 AM</div></div>
+        <div class="timeline-item done"><div class="t-label">Confirmed by Dealer</div><div class="t-time">8:45 AM</div></div>
+        <div class="timeline-item done"><div class="t-label">Out for Delivery</div><div class="t-time">9:00 AM</div></div>
+        <div class="timeline-item done"><div class="t-label">Delivered</div><div class="t-time">10:15 AM</div></div>
+      </div>
+      <div style="height:16px"></div>`;
+  }
+  sheet.classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-sheet').classList.remove('open');
+}
+</script>
+</body>
+</html>

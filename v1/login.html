@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if(localStorage.getItem('apnidukaan-theme')==='light')document.documentElement.classList.add('light');</script>
+<title>Login — ApniDukaan</title>
+<link rel="stylesheet" href="css/tokens.css">
+<style>
+body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+
+.login-content {
+  padding: 32px 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo-small {
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+}
+
+.logo-small svg {
+  width: 32px;
+  height: 32px;
+  color: #fff;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+
+.login-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.step {
+  display: none;
+}
+
+.step.active {
+  display: block;
+}
+
+.phone-input-group {
+  position: relative;
+}
+
+.country-code {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--fg);
+  font-weight: 500;
+  z-index: 2;
+}
+
+.phone-input {
+  padding-left: 60px !important;
+  font-family: var(--mono);
+  letter-spacing: 1px;
+}
+
+.otp-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.otp-digit {
+  width: 48px;
+  height: 48px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.otp-digit:focus {
+  border-color: var(--accent);
+}
+
+.otp-digit.filled {
+  border-color: var(--accent);
+  background: rgba(255,107,53,0.1);
+}
+
+.resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-top: 16px;
+}
+
+.resend-btn {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.resend-btn:hover {
+  text-decoration: underline;
+}
+
+.shop-setup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.setup-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.shop-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.shop-input-row .input-group {
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.features-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.features-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.feature-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.login-footer {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.terms-text {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.terms-text a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s;
+}
+
+.step-dot.active {
+  background: var(--accent);
+}
+
+.back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--fg);
+  transition: border-color 0.15s;
+}
+
+.back-btn:hover {
+  border-color: var(--accent);
+}
+
+.success-animation {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  animation: successPulse 0.6s ease-out;
+}
+
+.success-icon svg {
+  width: 40px;
+  height: 40px;
+  color: #fff;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.welcome-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+
+.welcome-sub {
+  font-size: 14px;
+  color: var(--fg-muted);
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="punch"></div>
+    <div class="status-icons">
+      <span>📶</span>
+      <span>📶</span>
+      <span>🔋</span>
+      <button class="theme-toggle" aria-label="Toggle theme" onclick="(function(){var h=document.documentElement;var isLight=h.classList.toggle('light');localStorage.setItem('apnidukaan-theme',isLight?'light':'dark');})()">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Login content -->
+  <div class="screen-body">
+    <div class="login-content">
+      
+      <div class="back-btn" onclick="goBack()" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </div>
+
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+        <div class="step-dot" id="dot4"></div>
+      </div>
+
+      <!-- Step 1: Phone Number -->
+      <div class="step active" id="step1">
+        <div class="login-header">
+          <div class="logo-small">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
+          <div class="login-title">Welcome to ApniDukaan</div>
+          <div class="login-subtitle">Enter your mobile number to get started</div>
+        </div>
+
+        <div class="login-form">
+          <div class="features-list">
+            <div class="features-title">What you'll get</div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              Inventory management with barcode scanning
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              Direct dealer ordering and customer billing
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              AI-powered business insights and suggestions
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              WhatsApp integration for customer bills
+            </div>
+          </div>
+
+          <div class="phone-input-group">
+            <div class="input-group">
+              <label>Mobile Number</label>
+              <div class="country-code">+91</div>
+              <input type="tel" class="phone-input" placeholder="9876543210" maxlength="10" id="phoneInput">
+            </div>
+          </div>
+        </div>
+
+        <div class="login-footer">
+          <div class="terms-text">
+            By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="sendOTP()">Send OTP</button>
+        </div>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div class="step" id="step2">
+        <div class="login-header">
+          <div class="login-title">Verify OTP</div>
+          <div class="login-subtitle">Enter the 6-digit code sent to<br><strong id="phoneDisplay">+91 98765 43210</strong></div>
+        </div>
+
+        <div class="login-form">
+          <div class="otp-container">
+            <input type="text" class="otp-digit" maxlength="1" id="otp1">
+            <input type="text" class="otp-digit" maxlength="1" id="otp2">
+            <input type="text" class="otp-digit" maxlength="1" id="otp3">
+            <input type="text" class="otp-digit" maxlength="1" id="otp4">
+            <input type="text" class="otp-digit" maxlength="1" id="otp5">
+            <input type="text" class="otp-digit" maxlength="1" id="otp6">
+          </div>
+
+          <div class="resend-row">
+            <span>Didn't receive code?</span>
+            <a href="#" class="resend-btn" onclick="resendOTP()">Resend OTP</a>
+          </div>
+        </div>
+
+        <div class="login-footer">
+          <button class="btn btn-primary btn-full" onclick="verifyOTP()">Verify & Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Shop Setup -->
+      <div class="step" id="step3">
+        <div class="login-header">
+          <div class="login-title">Setup Your Shop</div>
+          <div class="login-subtitle">Tell us about your business to personalize your experience</div>
+        </div>
+
+        <div class="login-form">
+          <div class="shop-setup">
+            <div class="setup-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              Shop Details
+            </div>
+            
+            <div class="input-group">
+              <label>Shop Name</label>
+              <input type="text" placeholder="e.g. Sharma General Store" id="shopName">
+            </div>
+
+            <div class="shop-input-row">
+              <div class="input-group">
+                <label>Owner Name</label>
+                <input type="text" placeholder="Your name" id="ownerName">
+              </div>
+              <div class="input-group">
+                <label>Shop Type</label>
+                <select id="shopType">
+                  <option value="">Select type</option>
+                  <option value="general">General Store</option>
+                  <option value="medical">Medical Store</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="clothing">Clothing</option>
+                  <option value="grocery">Grocery</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Shop Address</label>
+              <textarea placeholder="Enter your shop address" id="shopAddress"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-footer">
+          <button class="btn btn-primary btn-full" onclick="completeSetup()">Complete Setup</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div class="step" id="step4">
+        <div class="success-animation">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="welcome-text">Welcome to ApniDukaan!</div>
+          <div class="welcome-sub">Your shop is ready to go</div>
+        </div>
+
+        <div class="login-footer">
+          <button class="btn btn-primary btn-full" onclick="goToDashboard()">Start Managing Your Shop</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Android nav bar -->
+  <div class="android-nav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 12h18m-9-9v18"/>
+    </svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="11 19 2 12 11 5 11 19"/>
+    </svg>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+
+function showStep(step) {
+  // Hide all steps
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+  
+  // Show current step
+  document.getElementById(`step${step}`).classList.add('active');
+  document.getElementById(`dot${step}`).classList.add('active');
+  
+  // Show/hide back button
+  const backBtn = document.querySelector('.back-btn');
+  if (step > 1 && step < 4) {
+    backBtn.style.display = 'flex';
+  } else {
+    backBtn.style.display = 'none';
+  }
+  
+  currentStep = step;
+}
+
+function goBack() {
+  if (currentStep > 1) {
+    showStep(currentStep - 1);
+  }
+}
+
+function sendOTP() {
+  const phone = document.getElementById('phoneInput').value;
+  if (phone.length === 10) {
+    document.getElementById('phoneDisplay').textContent = `+91 ${phone.slice(0,5)} ${phone.slice(5)}`;
+    showStep(2);
+    // Focus first OTP input
+    document.getElementById('otp1').focus();
+  } else {
+    alert('Please enter a valid 10-digit mobile number');
+  }
+}
+
+function verifyOTP() {
+  const otpInputs = document.querySelectorAll('.otp-digit');
+  let otp = '';
+  otpInputs.forEach(input => {
+    otp += input.value;
+  });
+  
+  if (otp.length === 6) {
+    showStep(3);
+  } else {
+    alert('Please enter the complete 6-digit OTP');
+  }
+}
+
+function completeSetup() {
+  const shopName = document.getElementById('shopName').value;
+  const ownerName = document.getElementById('ownerName').value;
+  
+  if (shopName && ownerName) {
+    showStep(4);
+  } else {
+    alert('Please fill in shop name and owner name');
+  }
+}
+
+function goToDashboard() {
+  window.location.href = 'screens/01-dashboard.html';
+}
+
+function resendOTP() {
+  alert('OTP resent successfully!');
+}
+
+// OTP input handling
+document.querySelectorAll('.otp-digit').forEach((input, index) => {
+  input.addEventListener('input', (e) => {
+    if (e.target.value.length === 1) {
+      e.target.classList.add('filled');
+      // Move to next input
+      if (index < 5) {
+        document.getElementById(`otp${index + 2}`).focus();
+      }
+    } else {
+      e.target.classList.remove('filled');
+    }
+  });
+  
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+      document.getElementById(`otp${index}`).focus();
+    }
+  });
+});
+
+// Phone input formatting
+document.getElementById('phoneInput').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '');
+});
+</script>
+
+</body>
+</html>
