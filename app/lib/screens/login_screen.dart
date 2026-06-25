@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../core/providers/auth_provider.dart';
 import '../widgets/shared_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,7 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _otpFocuses = List.generate(6, (_) => FocusNode());
   final _shopNameCtrl = TextEditingController();
   final _ownerCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   String? _shopType;
+  bool _isSubmitting = false;
 
   void _goBack() => setState(() => _step--);
 
@@ -84,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Text('WHAT YOU\'LL GET', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ext.fg, letterSpacing: 0.5)),
                 const SizedBox(height: 12),
-                ...[
+                ...[ 
                   'Inventory management with barcode scanning',
                   'Direct dealer ordering and customer billing',
                   'AI-powered business insights and suggestions',
@@ -153,10 +157,43 @@ class _LoginScreenState extends State<LoginScreen> {
             GestureDetector(onTap: () {}, child: const Text('Resend OTP', style: TextStyle(fontSize: 13, color: AppColors.accent, fontWeight: FontWeight.w500))),
           ]),
           const SizedBox(height: 32),
-          AppButton(label: 'Verify & Continue', full: true, onPressed: () => setState(() => _step = 2)),
+          _isSubmitting
+              ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+              : AppButton(label: 'Verify & Continue', full: true, onPressed: _onVerifyOtp),
         ],
       ),
     );
+  }
+
+  /// Called when user taps "Verify & Continue" on OTP step.
+  /// OTP is simulated — real auth is phone-based login.
+  Future<void> _onVerifyOtp() async {
+    setState(() => _isSubmitting = true);
+
+    final authProvider = context.read<AuthProvider>();
+    final loggedIn = await authProvider.login(_phoneCtrl.text);
+
+    if (!mounted) return;
+
+    if (loggedIn) {
+      // Shop already exists — skip shop setup, go to success
+      setState(() {
+        _isSubmitting = false;
+        _step = 3;
+      });
+    } else if (authProvider.errorMessage != null) {
+      // Network or server error
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(authProvider.errorMessage!), backgroundColor: AppColors.danger),
+      );
+    } else {
+      // Phone not registered — proceed to shop setup
+      setState(() {
+        _isSubmitting = false;
+        _step = 2;
+      });
+    }
   }
 
   Widget _shopStep() {
@@ -186,17 +223,52 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: 10),
                   Expanded(child: AppDropdown(label: 'Shop Type', items: const ['General Store', 'Medical', 'Electronics', 'Clothing', 'Grocery', 'Other'], value: _shopType, onChanged: (v) => setState(() => _shopType = v))),
                 ]),
-                AppInput(label: 'Shop Address', hint: 'Enter your shop address', maxLines: 3),
+                AppInput(label: 'Shop Address', hint: 'Enter your shop address', maxLines: 3, controller: _addressCtrl),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          AppButton(label: 'Complete Setup', full: true, onPressed: () {
-            if (_shopNameCtrl.text.isNotEmpty && _ownerCtrl.text.isNotEmpty) setState(() => _step = 3);
-          }),
+          _isSubmitting
+              ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+              : AppButton(label: 'Complete Setup', full: true, onPressed: _onCompleteSetup),
         ],
       ),
     );
+  }
+
+  /// Called when user taps "Complete Setup" on shop details step.
+  Future<void> _onCompleteSetup() async {
+    if (_shopNameCtrl.text.isEmpty || _ownerCtrl.text.isEmpty) return;
+    if (_shopType == null) return;
+    if (_addressCtrl.text.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.register(
+      shopName: _shopNameCtrl.text,
+      ownerName: _ownerCtrl.text,
+      type: _shopType!,
+      address: _addressCtrl.text,
+      phoneNo: _phoneCtrl.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _isSubmitting = false;
+        _step = 3;
+      });
+    } else {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Registration failed'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   Widget _successStep() {

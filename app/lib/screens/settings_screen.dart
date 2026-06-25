@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/theme_provider.dart';
+import '../core/providers/auth_provider.dart';
 import '../widgets/shared_widgets.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -12,6 +13,11 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ext = context.appTheme;
     final tp = context.watch<ThemeProvider>();
+    final auth = context.watch<AuthProvider>();
+
+    final ownerName = auth.ownerName.isNotEmpty ? auth.ownerName : 'User';
+    final initial = ownerName.isNotEmpty ? ownerName[0].toUpperCase() : 'U';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -25,11 +31,11 @@ class SettingsScreen extends StatelessWidget {
           ),
           child: Row(children: [
             Container(width: 56, height: 56, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.accentDk),
-              child: const Center(child: Text('R', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)))),
+              child: Center(child: Text(initial, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)))),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Ramesh Kumar', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ext.fg)),
-              Text('+91 98765 43210 · ramesh@gmail.com', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
+              Text(ownerName, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ext.fg)),
+              Text(auth.phoneNo.isNotEmpty ? '+91 ${auth.phoneNo}' : '', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
               const SizedBox(height: 6),
               const AppBadge(label: 'Pro Plan'),
             ])),
@@ -46,9 +52,9 @@ class SettingsScreen extends StatelessWidget {
         // Shop details
         const SectionLabel('Shop Details'),
         _group(ext, [
-          _row(ext, Icons.home_outlined, AppColors.blue, 'Shop Name', 'Ramesh Kirana Store'),
-          _row(ext, Icons.location_on_outlined, AppColors.warn, 'Address', 'Main Market, Sector 12, Delhi'),
-          _row(ext, Icons.description_outlined, AppColors.accent, 'GST Number', '07AABCU9603R1ZX'),
+          _row(ext, Icons.home_outlined, AppColors.blue, 'Shop Name', auth.shopName.isNotEmpty ? auth.shopName : 'Not set'),
+          _row(ext, Icons.location_on_outlined, AppColors.warn, 'Address', auth.address.isNotEmpty ? auth.address : 'Not set'),
+          _row(ext, Icons.description_outlined, AppColors.accent, 'GST Number', auth.gstNo ?? 'Not set'),
         ]),
         const SizedBox(height: 16),
         // Billing
@@ -78,7 +84,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Pro Plan — Active', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ext.fg)),
-              Text('Unlimited bills · AI suggestions · Analytics · Renews 14 Jun 2026', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
+              Text('Unlimited bills · AI suggestions · Analytics', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
             ])),
             const AppBadge(label: '₹299/mo'),
           ]),
@@ -86,7 +92,13 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 16),
         // Logout
         GestureDetector(
-          onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+          onTap: () async {
+            final authProvider = context.read<AuthProvider>();
+            await authProvider.logout();
+            if (context.mounted) {
+              Navigator.pushReplacementNamed(context, '/login');
+            }
+          },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),

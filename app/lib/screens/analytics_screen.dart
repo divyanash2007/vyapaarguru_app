@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../core/services/api_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -11,11 +12,157 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  int _period = 1;
+  final _api = ApiService.instance;
+  int _period = 1; // 0=Today, 1=Week, 2=Month, 3=Year
+  bool _isLoading = true;
+
+  int _revenue = 0;
+  int _profit = 0;
+  int _ordersCount = 0;
+  List<double> _dailySales = [0, 0, 0, 0, 0, 0, 0];
+  List<FlSpot> _trendSpots = [];
+  Map<String, double> _categoryBreakdown = {};
+  List<MapEntry<String, double>> _topItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAnalytics();
+  }
+
+  Future<void> _loadAnalytics() async {
+    setState(() => _isLoading = true);
+    try {
+      // Fetch all sales
+      final salesData = await _api.get('/sales/', queryParams: {'per_page': '200'});
+      final salesList = (salesData['items'] as List<dynamic>).cast<Map<String, dynamic>>();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      // Filter by selected period
+      List<Map<String, dynamic>> filtered;
+      switch (_period) {
+        case 0: // Today
+          filtered = salesList.where((s) => DateTime.parse(s['created_at']).isAfter(today)).toList();
+          break;
+        case 1: // Week
+          final weekAgo = today.subtract(const Duration(days: 7));
+          filtered = salesList.where((s) => DateTime.parse(s['created_at']).isAfter(weekAgo)).toList();
+          break;
+        case 2: // Month
+          filtered = salesList.where((s) {
+            final d = DateTime.parse(s['created_at']);
+            return d.month == now.month && d.year == now.year;
+          }).toList();
+          break;
+        default: // Year
+          filtered = salesList.where((s) {
+            final d = DateTime.parse(s['created_at']);
+            return d.year == now.year;
+          }).toList();
+      }
+
+      // KPIs
+      int revenue = 0;
+      int ordersCount = filtered.length;
+      for (final sale in filtered) {
+        revenue += _parseNum(sale['grand_total']);
+      }
+      // Approximate profit as 22% of revenue (rough margin)
+      final profit = (revenue * 0.22).round();
+
+      // Daily sales for bar chart (last 7 days)
+      final dailySales = List<double>.filled(7, 0);
+      for (final sale in salesList) {
+        final d = DateTime.parse(sale['created_at']);
+        final daysAgo = now.difference(d).inDays;
+        if (daysAgo < 7) {
+          dailySales[6 - daysAgo] += _parseNum(sale['grand_total']).toDouble();
+        }
+      }
+
+      // Trend line — weekly totals for last 6 weeks
+      final trendSpots = <FlSpot>[];
+      for (int w = 5; w >= 0; w--) {
+        final weekStart = today.subtract(Duration(days: 7 * w + today.weekday - 1));
+        final weekEnd = weekStart.add(const Duration(days: 7));
+        double weekTotal = 0;
+        for (final sale in salesList) {
+          final d = DateTime.parse(sale['created_at']);
+          if (d.isAfter(weekStart) && d.isBefore(weekEnd)) {
+            weekTotal += _parseNum(sale['grand_total']);
+          }
+        }
+        trendSpots.add(FlSpot((5 - w).toDouble(), weekTotal / 1000));
+      }
+
+      // Category breakdown
+      final catRevenue = <String, double>{};
+      final itemRevenue = <String, double>{};
+      for (final sale in filtered) {
+        for (final item in (sale['items'] as List<dynamic>? ?? [])) {
+          final product = item['product'] as Map<String, dynamic>? ?? {};
+          final catName = product['category']?['name'] ?? 'Other';
+          final productName = product['name'] ?? 'Unknown';
+          final itemTotal = _parseNum(item['unit_price']).toDouble() * (item['qty'] as int? ?? 1);
+
+          catRevenue[catName] = (catRevenue[catName] ?? 0) + itemTotal;
+          itemRevenue[productName] = (itemRevenue[productName] ?? 0) + itemTotal;
+        }
+      }
+
+      // Top items by revenue
+      final sortedItems = itemRevenue.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+
+      if (!mounted) return;
+      setState(() {
+        _revenue = revenue;
+        _profit = profit;
+        _ordersCount = ordersCount;
+        _dailySales = dailySales;
+        _trendSpots = trendSpots;
+        _categoryBreakdown = catRevenue;
+        _topItems = sortedItems.take(4).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  int _parseNum(dynamic val) {
+    if (val == null) return 0;
+    if (val is int) return val;
+    if (val is double) return val.round();
+    return (double.tryParse(val.toString()) ?? 0).round();
+  }
+
+  String _formatCurrency(int amount) {
+    if (amount >= 100000) return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    if (amount >= 1000) return '₹${(amount / 1000).toStringAsFixed(1)}K';
+    return '₹$amount';
+  }
 
   @override
   Widget build(BuildContext context) {
     final ext = context.appTheme;
+
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+    }
+
+    // Normalize daily sales for bar chart
+    final maxDaily = _dailySales.reduce((a, b) => a > b ? a : b);
+
+    // Category pie data
+    final totalCatRevenue = _categoryBreakdown.values.fold(0.0, (a, b) => a + b);
+    final catColors = [const Color(0xFF00684A), AppColors.blue, AppColors.warn, AppColors.danger, Colors.grey];
+
+    // Top item max for progress bar
+    final topMax = _topItems.isNotEmpty ? _topItems.first.value : 1;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -26,7 +173,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Row(children: ['Today', 'Week', 'Month', 'Year'].asMap().entries.map((e) {
             final active = e.key == _period;
             return Expanded(child: GestureDetector(
-              onTap: () => setState(() => _period = e.key),
+              onTap: () {
+                setState(() => _period = e.key);
+                _loadAnalytics();
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 7),
                 decoration: BoxDecoration(color: active ? AppColors.accentDk : Colors.transparent, borderRadius: BorderRadius.circular(100)),
@@ -38,15 +188,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         const SizedBox(height: 16),
         // KPI row
         Row(children: [
-          _kpi(ext, '₹28.4K', 'Revenue', null),
+          _kpi(ext, _formatCurrency(_revenue), 'Revenue', null),
           const SizedBox(width: 8),
-          _kpi(ext, '₹6.2K', 'Profit', AppColors.accent),
+          _kpi(ext, _formatCurrency(_profit), 'Profit', AppColors.accent),
           const SizedBox(width: 8),
-          _kpi(ext, '142', 'Orders', null),
+          _kpi(ext, '$_ordersCount', 'Orders', null),
         ]),
         const SizedBox(height: 12),
         // Bar chart
-        _chartCard(ext, 'Daily Sales', 'This week · ₹28,400 total', SizedBox(
+        _chartCard(ext, 'Daily Sales', 'This week · ${_formatCurrency(_revenue)} total', SizedBox(
           height: 90,
           child: BarChart(BarChartData(
             borderData: FlBorderData(show: false),
@@ -57,18 +207,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, _) {
                 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                if (v.toInt() < 0 || v.toInt() >= days.length) return const SizedBox();
                 return Text(days[v.toInt()], style: GoogleFonts.sourceCodePro(fontSize: 9, color: ext.fgMuted));
               })),
             ),
-            barGroups: [45, 60, 38, 75, 90, 100, 55].asMap().entries.map((e) {
+            barGroups: _dailySales.asMap().entries.map((e) {
               return BarChartGroupData(x: e.key, barRods: [
-                BarChartRodData(toY: e.value.toDouble(), width: 20, borderRadius: const BorderRadius.vertical(top: Radius.circular(4)), color: e.key == 5 ? AppColors.accentDk : ext.surface2),
+                BarChartRodData(
+                  toY: maxDaily > 0 ? e.value : 0.1,
+                  width: 20,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  color: e.key == 6 ? AppColors.accentDk : ext.surface2,
+                ),
               ]);
             }).toList(),
           )),
         )),
         // Line chart
-        _chartCard(ext, 'Revenue Trend', 'Last 4 weeks · ↑ 14% growth', SizedBox(
+        _chartCard(ext, 'Revenue Trend', 'Last 6 weeks', SizedBox(
           height: 80,
           child: LineChart(LineChartData(
             borderData: FlBorderData(show: false),
@@ -76,7 +232,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             titlesData: const FlTitlesData(show: false),
             lineBarsData: [
               LineChartBarData(
-                spots: const [FlSpot(0, 35), FlSpot(1, 45), FlSpot(2, 52), FlSpot(3, 60), FlSpot(4, 70), FlSpot(5, 82)],
+                spots: _trendSpots.isNotEmpty ? _trendSpots : [const FlSpot(0, 0)],
                 isCurved: true, color: AppColors.accent,
                 barWidth: 2, dotData: const FlDotData(show: false),
                 belowBarData: BarAreaData(show: true, color: AppColors.accent.withValues(alpha: 0.1)),
@@ -85,36 +241,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           )),
         )),
         // Category donut
-        _chartCard(ext, 'Sales by Category', 'This week', Row(children: [
-          SizedBox(
-            width: 80, height: 80,
-            child: PieChart(PieChartData(
-              sectionsSpace: 0, centerSpaceRadius: 16,
-              sections: [
-                PieChartSectionData(value: 40, color: const Color(0xFF00684A), radius: 14, showTitle: false),
-                PieChartSectionData(value: 22, color: AppColors.blue, radius: 14, showTitle: false),
-                PieChartSectionData(value: 18, color: AppColors.warn, radius: 14, showTitle: false),
-                PieChartSectionData(value: 12, color: AppColors.danger, radius: 14, showTitle: false),
-                PieChartSectionData(value: 8, color: ext.surface2, radius: 14, showTitle: false),
-              ],
-            )),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(children: [
-            _legend(ext, const Color(0xFF00684A), 'Grocery', '40%'),
-            _legend(ext, AppColors.blue, 'Beverages', '22%'),
-            _legend(ext, AppColors.warn, 'Snacks', '18%'),
-            _legend(ext, AppColors.danger, 'Personal Care', '12%'),
-            _legend(ext, ext.surface2, 'Other', '8%'),
+        if (_categoryBreakdown.isNotEmpty)
+          _chartCard(ext, 'Sales by Category', _period == 0 ? 'Today' : _period == 1 ? 'This week' : _period == 2 ? 'This month' : 'This year', Row(children: [
+            SizedBox(
+              width: 80, height: 80,
+              child: PieChart(PieChartData(
+                sectionsSpace: 0, centerSpaceRadius: 16,
+                sections: _categoryBreakdown.entries.toList().asMap().entries.map((e) {
+                  final colorIdx = e.key % catColors.length;
+                  return PieChartSectionData(value: e.value.value, color: catColors[colorIdx], radius: 14, showTitle: false);
+                }).toList(),
+              )),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(children: _categoryBreakdown.entries.toList().asMap().entries.map((e) {
+              final colorIdx = e.key % catColors.length;
+              final pct = totalCatRevenue > 0 ? (e.value.value / totalCatRevenue * 100).round() : 0;
+              return _legend(ext, catColors[colorIdx], e.value.key, '$pct%');
+            }).toList())),
           ])),
-        ])),
         // Top selling
-        _chartCard(ext, 'Top Selling Items', 'By revenue this week', Column(children: [
-          _topItem(ext, '#1', 'Fortune Sunflower Oil 1L', '₹4,350', 1.0),
-          _topItem(ext, '#2', 'India Gate Basmati 1kg', '₹3,120', 0.72),
-          _topItem(ext, '#3', 'Maggi Noodles 70g', '₹2,380', 0.55),
-          _topItem(ext, '#4', 'Dove Soap 100g', '₹1,728', 0.40),
-        ])),
+        if (_topItems.isNotEmpty)
+          _chartCard(ext, 'Top Selling Items', 'By revenue', Column(children: _topItems.asMap().entries.map((e) {
+            final rank = '#${e.key + 1}';
+            final pct = topMax > 0 ? e.value.value / topMax : 0.0;
+            return _topItem(ext, rank, e.value.key, _formatCurrency(e.value.value.round()), pct);
+          }).toList())),
       ]),
     );
   }

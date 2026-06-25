@@ -16,15 +16,15 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _idx = 0;
 
-  static const _screens = [
-    DashboardScreen(),
-    InventoryScreen(),
-    PosBillingScreen(),
-    AnalyticsScreen(),
-    SettingsScreen(),
+  List<Widget> get _screens => [
+    DashboardScreen(onSwitchToBilling: () => setState(() => _idx = 2)),
+    const InventoryScreen(),
+    const PosBillingScreen(),
+    const AnalyticsScreen(),
+    const SettingsScreen(),
   ];
 
-  static const _titles = ['', 'Inventory', 'New Bill #1043', 'Analytics', 'Settings'];
+  static const _titles = ['', 'Inventory', 'New Bill', 'Analytics', 'Settings'];
 
   @override
   Widget build(BuildContext context) {

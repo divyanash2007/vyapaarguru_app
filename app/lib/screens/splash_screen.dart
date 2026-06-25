@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../core/providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,9 +23,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _pulseAnim = Tween<double>(begin: 1.0, end: 1.05).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
     _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
 
+    // Kick off auth check in the background immediately — runs during splash animation
+    final authProvider = context.read<AuthProvider>();
+    authProvider.tryAutoLogin();
+
     Future.delayed(const Duration(seconds: 3), () {
       _fadeCtrl.forward().then((_) {
-        if (mounted) Navigator.pushReplacementNamed(context, '/onboarding');
+        if (!mounted) return;
+        final auth = context.read<AuthProvider>();
+        if (auth.isLoggedIn) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          Navigator.pushReplacementNamed(context, '/onboarding');
+        }
       });
     });
   }

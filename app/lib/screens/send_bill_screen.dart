@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../core/providers/auth_provider.dart';
 import '../widgets/shared_widgets.dart';
 
 class SendBillScreen extends StatefulWidget {
@@ -16,11 +18,29 @@ class _SendBillScreenState extends State<SendBillScreen> {
   @override
   Widget build(BuildContext context) {
     final ext = context.appTheme;
+    final auth = context.watch<AuthProvider>();
+
+    // Get sale data from route arguments
+    final saleData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    // Extract data from sale response or fallback
+    final billId = saleData?['id']?.toString() ?? '—';
+    final grandTotal = saleData?['grand_total']?.toString() ?? '0';
+    final createdAt = saleData?['created_at'] != null
+        ? DateTime.tryParse(saleData!['created_at'])
+        : DateTime.now();
+    final dateStr = createdAt != null
+        ? '${createdAt.day} ${_monthName(createdAt.month)} ${createdAt.year}, ${_timeStr(createdAt)}'
+        : '';
+    final items = (saleData?['items'] as List<dynamic>?) ?? [];
+    final customerPhone = saleData?['customer']?['phone'] ?? '';
+    final tax = saleData?['tax']?.toString() ?? '0';
+
     return Scaffold(
       appBar: _sent ? null : AppBar(leading: const BackButton(), title: const Text('Send Bill')),
       body: SafeArea(
         top: false,
-        child: _sent ? _success(ext) : SingleChildScrollView(
+        child: _sent ? _success(ext, billId, customerPhone) : SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SectionLabel('Bill Preview'),
@@ -28,22 +48,26 @@ class _SendBillScreenState extends State<SendBillScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: ext.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: ext.border)),
               child: Column(children: [
-                Text('Ramesh Kirana Store', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ext.fg)),
-                Text('Main Market, Sector 12, Delhi · +91 98765 43210', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
+                Text(auth.shopName.isNotEmpty ? auth.shopName : 'Your Shop', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ext.fg)),
+                Text('${auth.address}${auth.phoneNo.isNotEmpty ? ' · +91 ${auth.phoneNo}' : ''}', style: TextStyle(fontSize: 12, color: ext.fgMuted)),
                 const SizedBox(height: 6),
-                Text('BILL #1043 · 14 May 2026, 9:41 AM', style: TextStyle(fontSize: 11, color: AppColors.accent, letterSpacing: 1)),
+                Text('BILL #$billId · $dateStr', style: TextStyle(fontSize: 11, color: AppColors.accent, letterSpacing: 1)),
                 Divider(color: ext.border, height: 24),
                 _billRow(ext, 'Item', 'Qty', 'Amount', header: true),
-                _billRow(ext, 'Tata Salt 500g', '1', '₹22'),
-                _billRow(ext, 'Fortune Oil 1L', '1', '₹145'),
-                _billRow(ext, 'Maggi Noodles 70g', '2', '₹28'),
-                _billRow(ext, 'GST (5%)', '', '₹10', muted: true),
+                ...items.map((item) {
+                  final productName = item['product']?['name'] ?? 'Item';
+                  final qty = item['qty']?.toString() ?? '1';
+                  final unitPrice = double.tryParse(item['unit_price']?.toString() ?? '0') ?? 0;
+                  final itemQty = int.tryParse(qty) ?? 1;
+                  return _billRow(ext, productName, qty, '₹${(unitPrice * itemQty).toStringAsFixed(0)}');
+                }),
+                _billRow(ext, 'Tax', '', '₹$tax', muted: true),
                 Container(
                   padding: const EdgeInsets.only(top: 8),
                   decoration: BoxDecoration(border: Border(top: BorderSide(color: ext.border))),
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     Text('Total', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ext.fg)),
-                    const Text('₹205', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                    Text('₹$grandTotal', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.accent)),
                   ]),
                 ),
               ]),
@@ -52,7 +76,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
             const SectionLabel('Customer Phone'),
             TextField(
               style: TextStyle(fontSize: 15, color: ext.fg),
-              controller: TextEditingController(text: '+91 98765 43210'),
+              controller: TextEditingController(text: customerPhone.isNotEmpty ? '+91 $customerPhone' : ''),
               decoration: InputDecoration(filled: true, fillColor: ext.surface2, border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ext.border)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11)),
             ),
             const SizedBox(height: 16),
@@ -102,7 +126,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
     return Padding(padding: EdgeInsets.symmetric(vertical: header ? 6 : 5), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Expanded(child: Text(c1, style: style)), SizedBox(width: 40, child: Text(c2, style: style, textAlign: TextAlign.center)), SizedBox(width: 60, child: Text(c3, style: style, textAlign: TextAlign.right))]));
   }
 
-  Widget _success(AppThemeExtension ext) {
+  Widget _success(AppThemeExtension ext, String billId, String phone) {
     return Center(child: Padding(
       padding: const EdgeInsets.all(32),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -111,7 +135,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
         const SizedBox(height: 16),
         Text('Bill Sent!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ext.fg)),
         const SizedBox(height: 8),
-        Text('Bill #1043 sent to\n+91 98765 43210 via WhatsApp', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ext.fgMuted, height: 1.5)),
+        Text('Bill #$billId sent${phone.isNotEmpty ? ' to\n+91 $phone' : ''} via WhatsApp', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ext.fgMuted, height: 1.5)),
         const SizedBox(height: 24),
         AppButton(label: 'Back to Home', onPressed: () => Navigator.popUntil(context, (r) => r.isFirst)),
         const SizedBox(height: 8),
@@ -119,4 +143,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
       ]),
     ));
   }
+
+  String _monthName(int m) => const ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m];
+  String _timeStr(DateTime d) => '${d.hour}:${d.minute.toString().padLeft(2, '0')} ${d.hour >= 12 ? 'PM' : 'AM'}';
 }
