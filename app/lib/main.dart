@@ -13,6 +13,7 @@ import 'screens/send_bill_screen.dart';
 import 'screens/dealer_order_screen.dart';
 import 'screens/ai_suggestions_screen.dart';
 import 'screens/order_history_screen.dart';
+import 'screens/supplier_management_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,7 @@ class VyapaarGuruApp extends StatelessWidget {
         '/dealer': (_) => const DealerOrderScreen(),
         '/ai': (_) => const AiSuggestionsScreen(),
         '/orders': (_) => const OrderHistoryScreen(),
+        '/suppliers': (_) => const SupplierManagementScreen(),
       },
     );
   }

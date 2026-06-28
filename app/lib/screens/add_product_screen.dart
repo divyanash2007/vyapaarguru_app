@@ -29,6 +29,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   List<Map<String, dynamic>> _categories = [];
 
+  String _getFormattedCategoryName(Map<String, dynamic> c) {
+    final parentId = c['parent_id'] as int?;
+    if (parentId != null) {
+      final parent = _categories.firstWhere((cat) => cat['id'] == parentId, orElse: () => {});
+      if (parent.isNotEmpty) {
+        return '${parent['name']} > ${c['name']}';
+      }
+    }
+    return c['name'] as String;
+  }
+
   // If barcode lookup finds an existing product, store its ID
   int? _existingProductId;
 
@@ -81,7 +92,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
         await _api.post('/categories/', body: {'name': name});
         await _loadCategories();
         setState(() {
-          _selectedCategory = name;
+          final matched = _categories.firstWhere(
+            (c) => (c['name'] as String).toLowerCase() == name.toLowerCase() && c['parent_id'] == null,
+            orElse: () => {},
+          );
+          _selectedCategory = matched.isNotEmpty ? _getFormattedCategoryName(matched) : name;
         });
       } on ApiException catch (e) {
         if (!mounted) return;
@@ -103,7 +118,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _existingProductId = product['id'];
         _nameCtrl.text = product['name'] ?? '';
         if (product['category'] != null) {
-          _selectedCategory = product['category']['name'];
+          final catId = product['category']['id'] as int?;
+          if (catId != null) {
+            final matched = _categories.firstWhere((c) => c['id'] == catId, orElse: () => {});
+            if (matched.isNotEmpty) {
+              _selectedCategory = _getFormattedCategoryName(matched);
+            } else {
+              _selectedCategory = product['category']['name'] as String?;
+            }
+          }
         }
         _sellingPriceCtrl.text = product['mrp']?.toString() ?? '';
         _selectedUnit = product['unit'];
@@ -140,9 +163,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
     try {
       int productId;
 
+      final mrpValue = double.tryParse(_sellingPriceCtrl.text) ?? 0.0;
+
       if (_existingProductId != null) {
         productId = _existingProductId!;
+        // Update product MRP in global catalog
+        await _api.patch('/products/$productId', body: {
+          'mrp': mrpValue,
+        });
       } else {
+        int? categoryId;
+        if (_selectedCategory != null) {
+          final matchedCat = _categories.firstWhere(
+            (c) => _getFormattedCategoryName(c) == _selectedCategory,
+            orElse: () => {},
+          );
+          if (matchedCat.isNotEmpty) {
+            categoryId = matchedCat['id'] as int?;
+          }
+        }
+
         // Create product in global catalog
         final barcode = _barcodeCtrl.text.isNotEmpty ? _barcodeCtrl.text : DateTime.now().millisecondsSinceEpoch.toString();
         final product = await _api.post('/products/', body: {
@@ -152,20 +192,34 @@ class _AddProductScreenState extends State<AddProductScreen> {
           'description': _notesCtrl.text.isNotEmpty ? _notesCtrl.text : _nameCtrl.text,
           'tax': 0,
           'unit': _selectedUnit ?? 'Piece',
-          'mrp': double.tryParse(_sellingPriceCtrl.text) ?? 0,
-          if (_selectedCategory != null) 'category_name': _selectedCategory,
+          'mrp': mrpValue,
+          'category_id': categoryId,
         });
         productId = product['id'];
       }
 
-      // Add to shop inventory
-      await _api.post('/inventory/', body: {
-        'product_id': productId,
-        'qty': int.tryParse(_openingStockCtrl.text) ?? 0,
-        'reorder_level': int.tryParse(_lowStockCtrl.text) ?? 5,
-        'cost_price': double.tryParse(_purchasePriceCtrl.text) ?? 0,
-        'selling_price': double.tryParse(_sellingPriceCtrl.text) ?? 0,
-      });
+      // Add or Update shop inventory
+      try {
+        await _api.post('/inventory/', body: {
+          'product_id': productId,
+          'qty': int.tryParse(_openingStockCtrl.text) ?? 0,
+          'reorder_level': int.tryParse(_lowStockCtrl.text) ?? 5,
+          'cost_price': double.tryParse(_purchasePriceCtrl.text) ?? 0,
+          'selling_price': mrpValue,
+        });
+      } on ApiException catch (e) {
+        if (e.statusCode == 409) {
+          // Update existing inventory item
+          await _api.put('/inventory/$productId', body: {
+            'qty': int.tryParse(_openingStockCtrl.text) ?? 0,
+            'reorder_level': int.tryParse(_lowStockCtrl.text) ?? 5,
+            'cost_price': double.tryParse(_purchasePriceCtrl.text) ?? 0,
+            'selling_price': mrpValue,
+          });
+        } else {
+          rethrow;
+        }
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -190,7 +244,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     final ext = context.appTheme;
-    final categoryNames = _categories.map((c) => c['name'] as String).toList();
+    final categoryNames = _categories.map((c) => _getFormattedCategoryName(c)).toSet().toList();
+    final dropdownCategories = categoryNames.isNotEmpty ? categoryNames : ['Grocery', 'Beverages', 'Snacks', 'Personal Care', 'Dairy', 'Household'];
+    if (_selectedCategory != null && !dropdownCategories.contains(_selectedCategory)) {
+      dropdownCategories.add(_selectedCategory!);
+    }
+
+    final unitItems = ['Piece', 'Kg', 'Gram', 'Litre', 'Ml', 'Pack', 'Box'];
+    if (_selectedUnit != null && !unitItems.contains(_selectedUnit)) {
+      unitItems.add(_selectedUnit!);
+    }
 
     return Scaffold(
       appBar: AppBar(leading: const BackButton(), title: const Text('Add Product')),
@@ -236,7 +299,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 Expanded(
                   child: AppDropdown(
                     label: 'Category',
-                    items: categoryNames.isNotEmpty ? categoryNames : ['Grocery', 'Beverages', 'Snacks', 'Personal Care', 'Dairy', 'Household'],
+                    items: dropdownCategories,
                     value: _selectedCategory,
                     onChanged: (v) => setState(() => _selectedCategory = v),
                   ),
@@ -254,11 +317,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
             Row(children: [
               Expanded(child: AppInput(label: 'Purchase Price (₹)', hint: '0.00', controller: _purchasePriceCtrl, keyboardType: TextInputType.number)),
               const SizedBox(width: 10),
-              Expanded(child: AppInput(label: 'Selling Price (₹)', hint: '0.00', controller: _sellingPriceCtrl, keyboardType: TextInputType.number)),
+              Expanded(child: AppInput(label: 'MRP / Selling Price (₹)', hint: '0.00', controller: _sellingPriceCtrl, keyboardType: TextInputType.number)),
             ]),
             AppInput(label: 'Opening Stock (units)', hint: '0', controller: _openingStockCtrl, keyboardType: TextInputType.number),
             AppInput(label: 'Low Stock Alert (units)', hint: '5', controller: _lowStockCtrl, keyboardType: TextInputType.number),
-            AppDropdown(label: 'Unit', items: const ['Piece', 'Kg', 'Gram', 'Litre', 'Ml', 'Pack', 'Box'], value: _selectedUnit, onChanged: (v) => setState(() => _selectedUnit = v)),
+            AppDropdown(label: 'Unit', items: unitItems, value: _selectedUnit, onChanged: (v) => setState(() => _selectedUnit = v)),
             // Photo upload
             Container(
               height: 80, width: double.infinity,

@@ -67,6 +67,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
+  String _getFormattedCategoryName(Map<String, dynamic> c) {
+    final parentId = c['parent_id'] as int?;
+    if (parentId != null) {
+      final parent = _categories.firstWhere((cat) => cat['id'] == parentId, orElse: () => {});
+      if (parent.isNotEmpty) {
+        return '${parent['name']} > ${c['name']}';
+      }
+    }
+    return c['name'] as String;
+  }
+
   List<Map<String, dynamic>> get _filteredItems {
     var items = _inventoryItems;
 
@@ -97,7 +108,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
-    final chipLabels = ['All', ..._categories.map((c) => c['name'] as String)];
+    final chipLabels = ['All', ..._categories.map((c) => _getFormattedCategoryName(c)).toSet()];
     final items = _filteredItems;
     final lowStockAlert = _lowStockItems.isNotEmpty
         ? '${_lowStockItems.first['product']?['name'] ?? 'Item'} — only ${_lowStockItems.first['qty']} units left'
@@ -211,13 +222,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     // Pick emoji from first char of category or product name
     final emoji = _getEmoji(product['category']?['name'] ?? name);
+    final imageUrl = product['img_url'] as String? ?? product['image_url'] as String?;
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: ext.border.withValues(alpha: 0.5)))),
       child: Row(children: [
-        Container(width: 40, height: 40, decoration: BoxDecoration(color: ext.surface2, borderRadius: BorderRadius.circular(6)),
-          child: Center(child: Text(emoji, style: const TextStyle(fontSize: 18)))),
+        Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(color: ext.surface2, borderRadius: BorderRadius.circular(6)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: hasImage
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(child: Text(emoji, style: const TextStyle(fontSize: 18))),
+                  )
+                : Center(child: Text(emoji, style: const TextStyle(fontSize: 18))),
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: ext.fg)),

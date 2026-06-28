@@ -55,6 +55,11 @@ class SettingsScreen extends StatelessWidget {
           _row(ext, Icons.home_outlined, AppColors.blue, 'Shop Name', auth.shopName.isNotEmpty ? auth.shopName : 'Not set'),
           _row(ext, Icons.location_on_outlined, AppColors.warn, 'Address', auth.address.isNotEmpty ? auth.address : 'Not set'),
           _row(ext, Icons.description_outlined, AppColors.accent, 'GST Number', auth.gstNo ?? 'Not set'),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.pushNamed(context, '/suppliers'),
+            child: _row(ext, Icons.local_shipping_outlined, AppColors.accent, 'Manage Suppliers', 'View, add, or edit your dealers'),
+          ),
         ]),
         const SizedBox(height: 16),
         // Billing

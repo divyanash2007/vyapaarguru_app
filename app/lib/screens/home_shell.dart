@@ -19,7 +19,7 @@ class _HomeShellState extends State<HomeShell> {
   List<Widget> get _screens => [
     DashboardScreen(onSwitchToBilling: () => setState(() => _idx = 2)),
     const InventoryScreen(),
-    const PosBillingScreen(),
+    PosBillingScreen(onBackToDashboard: () => setState(() => _idx = 0)),
     const AnalyticsScreen(),
     const SettingsScreen(),
   ];
@@ -30,7 +30,7 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final ext = context.appTheme;
     return Scaffold(
-      appBar: _idx == 0
+      appBar: (_idx == 0 || _idx == 2)
           ? null
           : AppBar(
               title: Text(_titles[_idx]),
@@ -79,7 +79,7 @@ class _HomeShellState extends State<HomeShell> {
         top: _idx == 0,
         child: IndexedStack(index: _idx, children: _screens),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: _idx == 2 ? null : Container(
         decoration: BoxDecoration(
           color: ext.surface,
           border: Border(top: BorderSide(color: ext.border)),
