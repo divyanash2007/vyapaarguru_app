@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/services/api_service.dart';
@@ -200,7 +201,10 @@ class _DealerOrderScreenState extends State<DealerOrderScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final supplierId = _suppliers[_selectedDealer]['id'];
+      final supplier = _suppliers[_selectedDealer];
+      final supplierId = supplier['id'];
+      final supplierPhone = supplier['phone']?.toString() ?? '';
+      
       await _api.post('/purchases/', body: {
         'supplier_id': supplierId,
         'items': _orderItems.map((i) => {
@@ -214,7 +218,47 @@ class _DealerOrderScreenState extends State<DealerOrderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Order sent to dealer successfully!'), backgroundColor: AppColors.success),
       );
-      Navigator.pop(context, true);
+
+      if (supplierPhone.isNotEmpty) {
+        final buffer = StringBuffer();
+        buffer.writeln('*Purchase Order*');
+        buffer.writeln('Supplier: ${supplier['name']}');
+        buffer.writeln('Expected Delivery: Tomorrow, 10 AM');
+        buffer.writeln('--------------------------------');
+        for (final item in _orderItems) {
+          buffer.writeln('${item['name']} x${item['qty']}');
+        }
+        buffer.writeln('--------------------------------');
+        buffer.writeln('*Total Estimated: ₹${_subtotal.toStringAsFixed(0)}*');
+        buffer.writeln('Please confirm and prepare this order. Thank you!');
+
+        final phoneDigits = supplierPhone.replaceAll(RegExp(r'\D'), '');
+        final finalPhone = phoneDigits.length == 10 ? '91$phoneDigits' : phoneDigits;
+
+        final url = Uri.parse('https://wa.me/$finalPhone?text=${Uri.encodeComponent(buffer.toString())}');
+        final fallbackUrl = Uri.parse('whatsapp://send?phone=$finalPhone&text=${Uri.encodeComponent(buffer.toString())}');
+
+        try {
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else if (await canLaunchUrl(fallbackUrl)) {
+            await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+          } else {
+            // Direct launch bypass for package visibility constraints
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not launch WhatsApp: $e'), backgroundColor: AppColors.danger),
+            );
+          }
+        }
+      }
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/auth_provider.dart';
@@ -12,8 +13,105 @@ class SendBillScreen extends StatefulWidget {
 }
 
 class _SendBillScreenState extends State<SendBillScreen> {
+  late TextEditingController _phoneController;
   int _selected = 0;
   bool _sent = false;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final saleData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final customerPhone = saleData?['customer']?['phone'] ?? '';
+      if (customerPhone.isNotEmpty) {
+        _phoneController.text = customerPhone;
+      }
+      _initialized = true;
+    }
+  }
+
+  Future<void> _sendBill() async {
+    final saleData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final billId = saleData?['id']?.toString() ?? '—';
+    final grandTotal = saleData?['grand_total']?.toString() ?? '0';
+    final createdAt = saleData?['created_at'] != null
+        ? DateTime.tryParse(saleData!['created_at'])
+        : DateTime.now();
+    final dateStr = createdAt != null
+        ? '${createdAt.day} ${_monthName(createdAt.month)} ${createdAt.year}, ${_timeStr(createdAt)}'
+        : '';
+    final items = (saleData?['items'] as List<dynamic>?) ?? [];
+    final tax = saleData?['tax']?.toString() ?? '0';
+
+    if (_selected == 0) { // WhatsApp
+      final rawPhone = _phoneController.text.trim();
+      final phoneDigits = rawPhone.replaceAll(RegExp(r'\D'), '');
+      if (phoneDigits.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid customer phone number'), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+      final finalPhone = phoneDigits.length == 10 ? '91$phoneDigits' : phoneDigits;
+
+      final auth = context.read<AuthProvider>();
+      final shopName = auth.shopName.isNotEmpty ? auth.shopName : 'Our Shop';
+      final buffer = StringBuffer();
+      buffer.writeln('*$shopName*');
+      buffer.writeln('BILL #$billId');
+      buffer.writeln('Date: $dateStr');
+      buffer.writeln('--------------------------------');
+      for (final item in items) {
+        final productName = item['product']?['name'] ?? 'Item';
+        final qty = item['qty']?.toString() ?? '1';
+        final unitPrice = double.tryParse(item['unit_price']?.toString() ?? '0') ?? 0;
+        final itemQty = int.tryParse(qty) ?? 1;
+        final totalAmt = unitPrice * itemQty;
+        buffer.writeln('$productName x$qty - ₹${totalAmt.toStringAsFixed(0)}');
+      }
+      if (double.tryParse(tax) != null && double.tryParse(tax)! > 0) {
+        buffer.writeln('Tax: ₹$tax');
+      }
+      buffer.writeln('--------------------------------');
+      buffer.writeln('*Total: ₹$grandTotal*');
+      buffer.writeln('Thank you for shopping with us!');
+
+      final url = Uri.parse('https://wa.me/$finalPhone?text=${Uri.encodeComponent(buffer.toString())}');
+      final fallbackUrl = Uri.parse('whatsapp://send?phone=$finalPhone&text=${Uri.encodeComponent(buffer.toString())}');
+
+      try {
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else if (await canLaunchUrl(fallbackUrl)) {
+          await launchUrl(fallbackUrl, mode: LaunchMode.externalApplication);
+        } else {
+          // Bypasses some OS-level package restrictions on newer Android/iOS versions
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not launch WhatsApp: $e'), backgroundColor: AppColors.danger),
+        );
+        return;
+      }
+    }
+
+    setState(() => _sent = true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +131,13 @@ class _SendBillScreenState extends State<SendBillScreen> {
         ? '${createdAt.day} ${_monthName(createdAt.month)} ${createdAt.year}, ${_timeStr(createdAt)}'
         : '';
     final items = (saleData?['items'] as List<dynamic>?) ?? [];
-    final customerPhone = saleData?['customer']?['phone'] ?? '';
     final tax = saleData?['tax']?.toString() ?? '0';
 
     return Scaffold(
       appBar: _sent ? null : AppBar(leading: const BackButton(), title: const Text('Send Bill')),
       body: SafeArea(
         top: false,
-        child: _sent ? _success(ext, billId, customerPhone) : SingleChildScrollView(
+        child: _sent ? _success(ext, billId, _phoneController.text) : SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SectionLabel('Bill Preview'),
@@ -76,7 +173,8 @@ class _SendBillScreenState extends State<SendBillScreen> {
             const SectionLabel('Customer Phone'),
             TextField(
               style: TextStyle(fontSize: 15, color: ext.fg),
-              controller: TextEditingController(text: customerPhone.isNotEmpty ? '+91 $customerPhone' : ''),
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
               decoration: InputDecoration(filled: true, fillColor: ext.surface2, border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: ext.border)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11)),
             ),
             const SizedBox(height: 16),
@@ -114,7 +212,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
               );
             }),
             const SizedBox(height: 8),
-            AppButton(label: 'Send Bill Now', full: true, icon: const Icon(Icons.send, size: 16, color: Colors.white), onPressed: () => setState(() => _sent = true)),
+            AppButton(label: 'Send Bill Now', full: true, icon: const Icon(Icons.send, size: 16, color: Colors.white), onPressed: _sendBill),
           ]),
         ),
       ),
@@ -135,7 +233,7 @@ class _SendBillScreenState extends State<SendBillScreen> {
         const SizedBox(height: 16),
         Text('Bill Sent!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ext.fg)),
         const SizedBox(height: 8),
-        Text('Bill #$billId sent${phone.isNotEmpty ? ' to\n+91 $phone' : ''} via WhatsApp', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ext.fgMuted, height: 1.5)),
+        Text('Bill #$billId sent${phone.isNotEmpty ? ' to\n$phone' : ''} via WhatsApp', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: ext.fgMuted, height: 1.5)),
         const SizedBox(height: 24),
         AppButton(label: 'Back to Home', onPressed: () => Navigator.popUntil(context, (r) => r.isFirst)),
         const SizedBox(height: 8),
