@@ -1,14 +1,21 @@
 /// Central API configuration.
 ///
-/// Change [baseUrl] depending on how you're running the app:
-///   • Physical device (same WiFi): use your computer's local IP
-///   • Android emulator:            use 10.0.2.2
-///   • iOS simulator / web:         use localhost
+/// Toggle [isProduction] to switch between local dev and deployed backend.
+///   • Production: points to your Railway / hosted backend URL
+///   • Development: points to your local machine
 class ApiConfig {
   ApiConfig._();
 
-  // ── Change this to match your setup ──────────────────────────
-  static const String baseUrl = 'http://10.53.10.239:8000/api/v1';
-  // static const String baseUrl = 'http://10.0.2.2:8000/api/v1';   // Android emulator
-  // static const String baseUrl = 'http://localhost:8000/api/v1';   // iOS simulator / web
+  // ── Set to true before building the release AAB ──────────────
+  static const bool isProduction = false;
+
+  // ── Production URL — update this after Railway deploy ────────
+  static const String _productionUrl = 'https://YOUR-RAILWAY-APP.up.railway.app/api/v1';
+
+  // ── Dev URLs — pick the one that matches your setup ──────────
+  static const String _devUrl = 'http://10.53.10.239:8000/api/v1'; // Android emulator
+  // static const String _devUrl = 'http://10.53.10.239:8000/api/v1'; // Physical device (WiFi)
+  // static const String _devUrl = 'http://localhost:8000/api/v1';     // iOS simulator / web
+
+  static const String baseUrl = isProduction ? _productionUrl : _devUrl;
 }
