@@ -7,15 +7,13 @@ class ApiConfig {
   ApiConfig._();
 
   // ── Set to true before building the release AAB ──────────────
-  static const bool isProduction = false;
+  static const bool isProduction = true;
 
-  // ── Production URL — update this after Railway deploy ────────
-  static const String _productionUrl = 'https://YOUR-RAILWAY-APP.up.railway.app/api/v1';
+  // ── Production URL — Railway backend ────────
+  static const String _productionUrl = 'https://posbackend-production-ba70.up.railway.app/api/v1';
 
   // ── Dev URLs — pick the one that matches your setup ──────────
-  static const String _devUrl = 'http://10.53.10.239:8000/api/v1'; // Android emulator
-  // static const String _devUrl = 'http://10.53.10.239:8000/api/v1'; // Physical device (WiFi)
-  // static const String _devUrl = 'http://localhost:8000/api/v1';     // iOS simulator / web
+  static const String _devUrl = 'http://10.53.10.239:8000/api/v1'; // Local dev
 
   static const String baseUrl = isProduction ? _productionUrl : _devUrl;
 }
